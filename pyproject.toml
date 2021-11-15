@@ -11,7 +11,6 @@ empkins-io = {path = "../empkins_io", develop = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-doit = "^0.33.1"
 poethepoet = "^0.10.0"
 
 [build-system]
@@ -45,6 +44,7 @@ multi_line_output = 3
 line_length = 120
 skip_gitignore = true
 
+
 [tool.poe.tasks]
 _black = "black ."
 _black_check = "black . --check"
@@ -55,6 +55,7 @@ _isort_check = "isort **/*.py --check-only"
 format = ["_black", "_isort"]
 format_check = ["_black_check", "_isort_check"]
 lint = "prospector"
-test = "pytest --cov=empkins_io --cov-report=xml"
+test = "pytest --cov=empkins_macro --cov-report=xml"
 docs = {"script" = "_tasks:task_docs"}
 update_version = {"script" = "_tasks:task_update_version"}
+default = ["format", "lint", "test"]
