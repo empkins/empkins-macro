@@ -2,17 +2,11 @@ from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
-from empkins_io.sensors.motion_capture.body_parts import (
-    BODY_PART_GROUP,
-    get_body_parts_by_group,
-    get_all_body_parts,
-)
+from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_body_parts_by_group, get_all_body_parts
 from itertools import product
 from typing_extensions import get_args
 
 from empkins_macro.utils._types import str_t
-
-
 
 
 def _sanitize_multicolumn_input(data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t]) -> Sequence[Tuple]:
@@ -50,7 +44,7 @@ def _sanitize_output(
 
 
 def _apply_func_per_group(
-    data: pd.DataFrame, func_name: Callable, data_format: str, param_dict: Dict[str, Any], **kwargs
+    data: pd.DataFrame, data_format: str, func_name: Callable, param_dict: Dict[str, Any], **kwargs
 ) -> Dict[str, pd.Series]:
 
     col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict)

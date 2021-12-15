@@ -17,6 +17,7 @@ def static_periods(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     channel = kwargs.pop("channel", "acc")
     axis = "norm"
     body_part_name, body_part = _extract_body_part(kwargs.pop("body_part", None))
+    assert kwargs.get("sampling_rate"), "missing parameter 'sampling_rate'!"
 
     static_periods_start_end = _static_periods_per_body_part(data, data_format, body_part, channel, **kwargs)
 
