@@ -9,6 +9,7 @@ def absolute_movement(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     data_format = "global_pose"
     channel = "pos"
     axis = "norm"
+    name = "absolute_movement"
     body_part_name, body_part = _extract_body_part(kwargs.get("body_part", None))
 
     data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
@@ -18,7 +19,7 @@ def absolute_movement(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     out = out.unstack("time")
     out = out.diff(axis=1).abs().sum().mean()
     out = pd.Series([out])
-    out.index = pd.MultiIndex.from_tuples([(body_part_name, "absolute_movement", channel, axis)], names=_INDEX_LEVELS)
+    out.index = pd.MultiIndex.from_tuples([(body_part_name, name, channel, axis, name)], names=_INDEX_LEVELS)
     out = out.reorder_levels(_INDEX_LEVELS_OUT)
 
     return pd.DataFrame(out, columns=["data"])
