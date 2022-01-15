@@ -7,6 +7,11 @@ from sklearn.preprocessing import minmax_scale
 from tsfresh.feature_extraction.feature_calculators import number_crossing_m
 
 
+def norm(data: pd.DataFrame) -> pd.DataFrame:
+    out = np.linalg.norm(data, axis=1)
+    return pd.DataFrame(out, columns=["norm"], index=data.index)
+
+
 def max_val(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.max(data))
     out.index = out.index.get_level_values("axis")
@@ -69,20 +74,29 @@ def cov(data: pd.DataFrame) -> pd.Series:
 
 def cov_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.std(norm) / np.mean(norm)
+    if np.mean(norm) != 0:
+        out = np.std(norm) / np.mean(norm)
+    else:
+        out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def entropy(data: pd.DataFrame) -> pd.Series:
-    data_scale = minmax_scale(data)
-    out = stats.entropy(data_scale)
+    out = minmax_scale(data)
+    if np.sum(out) != 0:
+        out = stats.entropy(out)
+    else:
+        out = np.nan
     return pd.Series(out, index=data.columns.get_level_values(level=-1))
 
 
 def entropy_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    data_scale = minmax_scale(norm)
-    out = stats.entropy(data_scale)
+    norm = minmax_scale(norm)
+    if np.sum(norm) != 0:
+        out = stats.entropy(norm)
+    else:
+        out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
@@ -121,8 +135,11 @@ def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) ->
         param = [param]
     param = [{"aggtype": pn} for pn in param]
 
-    out = np.apply_along_axis(fft_aggregated, axis=0, arr=data, param=param)
-    out = [[x[1] for x in o][0] for o in out]
+    if np.sum(data) != 0:
+        out = np.apply_along_axis(fft_aggregated, axis=0, arr=data, param=param)
+        out = [[x[1] for x in o][0] for o in out]
+    else:
+        out = np.nan
     out = pd.Series(out, index=data.columns.get_level_values(level=-1))
     return out
 
@@ -134,8 +151,11 @@ def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = Non
         param = ["centroid", "variance", "skew", "kurtosis"]
     if isinstance(param, str):
         param = [param]
-    param = [{"aggtype": pn} for pn in param]
+    param = [{"aggtype": param_name} for param_name in param]
 
     norm = np.linalg.norm(data, axis=1)
-    out = list(fft_aggregated(norm, param=param))[0][1]
+    if np.sum(norm) != 0:
+        out = list(fft_aggregated(norm, param=param))[0][1]
+    else:
+        out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
