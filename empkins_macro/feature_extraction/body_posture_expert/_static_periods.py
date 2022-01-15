@@ -16,13 +16,23 @@ def static_periods(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     data_format = kwargs.pop("data_format", "calc")
     channel = kwargs.pop("channel", "acc")
     axis = "norm"
+    name = "static_periods"
     body_part_name, body_part = _extract_body_part(kwargs.pop("body_part", None))
     assert kwargs.get("sampling_rate"), "missing parameter 'sampling_rate'!"
+    sampling_rate = kwargs.pop("sampling_rate")
+    window_sec = kwargs.pop("window_sec", 5)
+    overlap_percent = kwargs.pop("overlap_percent", 50)
+    threshold = kwargs.pop("threshold", 0.0001)
 
-    static_periods_start_end = _static_periods_per_body_part(data, data_format, body_part, channel, **kwargs)
+    if kwargs.get("suffix", False):
+        name += f"_{window_sec}_{overlap_percent}_{threshold}"
+
+    static_periods_start_end = _static_periods_per_body_part(
+        data, data_format, body_part, channel, sampling_rate, window_sec, overlap_percent, threshold
+    )
 
     out = compute_params_from_start_end_time_array(static_periods_start_end, data)
-    out = {(body_part_name, "static_periods", channel, axis): out}
+    out = {(body_part_name, name, channel, axis): out}
     out = pd.concat(out, names=_INDEX_LEVELS)
     out = out.reorder_levels(_INDEX_LEVELS_OUT)
 
@@ -30,14 +40,17 @@ def static_periods(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
 
 
 def _static_periods_per_body_part(
-    data: pd.DataFrame, data_format: str, body_part: Sequence[str], channel: str, **kwargs
+    data: pd.DataFrame,
+    data_format: str,
+    body_part: Sequence[str],
+    channel: str,
+    sampling_rate: float,
+    window_sec: int,
+    overlap_percent: float,
+    threshold: float,
 ) -> pd.DataFrame:
-    sampling_rate = kwargs.get("sampling_rate")
-    window_sec = kwargs.get("window_sec", 5)
-    overlap_percent = kwargs.get("overlap_percent", 50)
-    threshold = kwargs.get("threshold", 0.0001)
 
-    static_periods_list = []
+    sp_list = []
     for part in body_part:
         data_slice = data.loc[:, pd.IndexSlice[data_format, [part], channel, :]]
         sp_arr = find_static_moments(
@@ -47,20 +60,23 @@ def _static_periods_per_body_part(
             sampling_rate=sampling_rate,
             threshold=threshold,
         )
-        static_periods_list.append(sp_arr)
+        sp_list.append(sp_arr)
 
     if len(body_part) > 1:
-        static_periods_list = [
-            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode() for sp in static_periods_list
-        ]
-
-        intersec_arr = np.intersect1d(*static_periods_list)
+        sp_list = [sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode() for sp in sp_list]
+        intersec_arr = sp_list[0]
+        for sp in sp_list:
+            intersec_arr = np.intersect1d(intersec_arr, sp)
         split_idx = np.where(np.ediff1d(intersec_arr) != 1)[0] + 1
         sp_arr = np.split(intersec_arr, split_idx)
+
+        if np.sum([len(sp) for sp in sp_arr]) == 0:
+            return pd.DataFrame(columns=["start", "end"])
+
         sp_arr = [(s[0], s[-1]) for s in sp_arr]
         sp_arr = pd.DataFrame(sp_arr, columns=["start", "end"])
     else:
-        sp_arr = static_periods_list[0]
+        sp_arr = sp_list[0]
 
     if len(sp_arr) == 0:
         return pd.DataFrame(columns=["start", "end"])
