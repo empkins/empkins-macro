@@ -1,30 +1,43 @@
+from itertools import product
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
-from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_body_parts_by_group, get_all_body_parts
-from itertools import product
 from typing_extensions import get_args
 
+from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_all_body_parts, get_body_parts_by_group
 from empkins_macro.utils._types import str_t
 
 
-def _sanitize_multicolumn_input(data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t]) -> Sequence[Tuple]:
+def _sanitize_multicolumn_input(
+    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t]
+) -> Dict[Tuple, Tuple]:
     _assert_has_columns_any_level(data, [[data_format]])
 
+    param_dict_out = {}
     for channel in param_dict:
-        if isinstance(param_dict[channel], str):
-            param_dict[channel] = [param_dict[channel]]
-        _assert_has_columns_any_level(data, [param_dict[channel]])
+        body_parts = param_dict[channel]
+        if isinstance(body_parts, str):
+            body_parts = [body_parts]
+        body_part_dict = dict([_extract_body_part(body_part) for body_part in body_parts])
+        for key, body_parts in body_part_dict.items():
+            _assert_has_columns_any_level(data, [body_parts])
+            param_dict_out[(key, channel)] = tuple(body_parts)
+        param_dict[channel] = body_part_dict
 
-    param_list = [[v, [k]] for k, v in param_dict.items()]
-    param_list = [list(product(*v)) for v in param_list]
-    param_list = tuple((*l, slice(None)) for v in param_list for l in v)
-    return param_list
+    param_dict_out = {key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out}
+
+    # param_list = [(item[0], item[1], item[0], slice(None)) for item in param_list]
+    # print(param_list)
+
+    # param_list = [[body_part_dict, [channel]] for channel, body_part_dict in param_dict.items()]
+    # param_list = [list(product(*v)) for v in param_list]
+    # param_list = tuple((*l, slice(None)) for v in param_list for l in v)
+    return param_dict_out
 
 
 def _sanitize_output(
-    data_dict: Dict[str, pd.Series],
+    data_dict: Dict[Tuple, pd.Series],
     type_name: str,
     index_names: Sequence[str],
     new_index_order: Optional[Sequence[str]] = None,
@@ -45,16 +58,16 @@ def _sanitize_output(
 
 def _apply_func_per_group(
     data: pd.DataFrame, data_format: str, func_name: Callable, param_dict: Dict[str, Any], **kwargs
-) -> Dict[str, pd.Series]:
+) -> Dict[Tuple, pd.Series]:
 
     col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict)
     data = data.loc[:, data_format]
 
     return_dict = {}
-    for col_idxs in col_idx_groups:
+    for key, col_idxs in col_idx_groups.items():
         data_slice = data.loc[:, col_idxs]
-        return_dict[col_idxs[:-1]] = func_name(data_slice, **kwargs)
-
+        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+        return_dict[key] = res.mean(axis=1)
     return return_dict
 
 
