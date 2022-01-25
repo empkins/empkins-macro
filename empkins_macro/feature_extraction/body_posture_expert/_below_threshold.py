@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 import biopsykit as bp
 import numpy as np
@@ -9,22 +9,26 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,
     _INDEX_LEVELS_OUT,
     compute_params_from_start_end_time_array,
-    start_end_array_indices_to_time
+    start_end_array_indices_to_time,
 )
+from empkins_macro.utils._types import str_t
 
 
-def below_threshold(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
-    data_format = kwargs.pop("data_format", "calc")
-    channel = kwargs.pop("channel", "vel")
-    axis = "norm"
+def below_threshold(
+    data: pd.DataFrame,
+    body_part: str_t,
+    data_format: Optional[str] = "calc",
+    channel: Optional[str] = "vel",
+    axis: Optional[str] = "norm",
+    threshold: Optional[float] = 0.1,
+    **kwargs,
+) -> pd.DataFrame:
     name = "below_threshold"
-    threshold = kwargs.pop("threshold", 0.1)
-    body_part_name, body_part = _extract_body_part(kwargs.pop("body_part", None))
-
-    start_end_below = _below_threshold_per_body_part(data, data_format, body_part, channel, threshold)
-
     if kwargs.get("suffix", False):
         name += f"_{threshold}"
+
+    body_part_name, body_part = _extract_body_part(body_part)
+    start_end_below = _below_threshold_per_body_part(data, data_format, body_part, channel, threshold)
 
     out = compute_params_from_start_end_time_array(start_end_below, data)
     out = {(body_part_name, name, channel, axis): out}

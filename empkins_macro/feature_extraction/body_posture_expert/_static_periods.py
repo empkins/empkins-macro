@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 import numpy as np
 import pandas as pd
@@ -10,22 +10,26 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS_OUT,
     compute_params_from_start_end_time_array,
 )
+from empkins_macro.utils._types import str_t
 
 
-def static_periods(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
-    data_format = kwargs.pop("data_format", "calc")
-    channel = kwargs.pop("channel", "acc")
-    axis = "norm"
+def static_periods(
+    data: pd.DataFrame,
+    body_part: str_t,
+    sampling_rate: float,
+    data_format: Optional[str] = "calc",
+    channel: Optional[str] = "vel",
+    axis: Optional[str] = "norm",
+    window_sec: Optional[int] = 1,
+    overlap_percent: Optional[float] = 0.5,
+    threshold: Optional[float] = 0.0001,
+    **kwargs,
+) -> pd.DataFrame:
     name = "static_periods"
-    body_part_name, body_part = _extract_body_part(kwargs.pop("body_part", None))
-    assert kwargs.get("sampling_rate"), "missing parameter 'sampling_rate'!"
-    sampling_rate = kwargs.pop("sampling_rate")
-    window_sec = kwargs.pop("window_sec", 5)
-    overlap_percent = kwargs.pop("overlap_percent", 50)
-    threshold = kwargs.pop("threshold", 0.0001)
-
     if kwargs.get("suffix", False):
         name += f"_{window_sec}_{overlap_percent}_{threshold}"
+
+    body_part_name, body_part = _extract_body_part(body_part)
 
     static_periods_start_end = _static_periods_per_body_part(
         data, data_format, body_part, channel, sampling_rate, window_sec, overlap_percent, threshold
