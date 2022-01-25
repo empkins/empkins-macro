@@ -5,6 +5,7 @@ from empkins_macro.feature_extraction.base_functions._base_functions import (
     abs_max_norm,
     cov,
     cov_norm,
+    euclidean_distance,
     entropy,
     entropy_norm,
     fft_aggregated,
@@ -18,5 +19,5 @@ from empkins_macro.feature_extraction.base_functions._base_functions import (
     norm,
     std,
     std_norm,
-    zero_crossings
+    zero_crossings,
 )
