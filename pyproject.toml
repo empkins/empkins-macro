@@ -7,7 +7,7 @@ authors = ["Robert Richer <robert.richer@fau.de>"]
 [tool.poetry.dependencies]
 python = ">=3.7.1,<3.10"
 tsfresh = "^0.18.0"
-biopsykit = {version = "^0", extras = ["jupyter"]}
+biopsykit = {version = "^0.3.0", extras = ["jupyter"]}
 empkins-io = {path = "../empkins-io", develop = true}
 
 [tool.poetry.dev-dependencies]
