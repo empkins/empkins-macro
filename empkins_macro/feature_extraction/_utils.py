@@ -1,11 +1,16 @@
 from itertools import product
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+import math
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
 from typing_extensions import get_args
 
-from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_all_body_parts, get_body_parts_by_group
+from empkins_io.sensors.motion_capture.body_parts import (
+    BODY_PART_GROUP,
+    get_all_body_parts,
+    get_body_parts_by_group,
+)
 from empkins_macro.utils._types import str_t
 
 
@@ -19,13 +24,17 @@ def _sanitize_multicolumn_input(
         body_parts = param_dict[channel]
         if isinstance(body_parts, str):
             body_parts = [body_parts]
-        body_part_dict = dict([_extract_body_part(body_part) for body_part in body_parts])
+        body_part_dict = dict(
+            [_extract_body_part(body_part) for body_part in body_parts]
+        )
         for key, body_parts in body_part_dict.items():
             _assert_has_columns_any_level(data, [body_parts])
             param_dict_out[(key, channel)] = tuple(body_parts)
         param_dict[channel] = body_part_dict
 
-    param_dict_out = {key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out}
+    param_dict_out = {
+        key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out
+    }
 
     # param_list = [(item[0], item[1], item[0], slice(None)) for item in param_list]
     # print(param_list)
@@ -57,7 +66,11 @@ def _sanitize_output(
 
 
 def _apply_func_per_group(
-    data: pd.DataFrame, data_format: str, func_name: Callable, param_dict: Dict[str, Any], **kwargs
+    data: pd.DataFrame,
+    data_format: str,
+    func_name: Callable,
+    param_dict: Dict[str, Any],
+    **kwargs
 ) -> Dict[Tuple, pd.Series]:
 
     col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict)
@@ -66,7 +79,9 @@ def _apply_func_per_group(
     return_dict = {}
     for key, col_idxs in col_idx_groups.items():
         data_slice = data.loc[:, col_idxs]
-        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(
+            lambda df: func_name(df, **kwargs)
+        )
         return_dict[key] = res.mean(axis=1)
     return return_dict
 
@@ -82,3 +97,27 @@ def _extract_body_part(
         return body_parts, [body_parts]
 
     return "_".join(body_parts), body_parts
+
+
+def _euler_from_quaternion(x, y, z, w):
+    """
+    Convert a quaternion into euler angles (roll, pitch, yaw)
+    roll is rotation around x in radians (counterclockwise)
+    pitch is rotation around y in radians (counterclockwise)
+    yaw is rotation around z in radians (counterclockwise)
+    https://automaticaddison.com/how-to-convert-a-quaternion-into-euler-angles-in-python/
+    """
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll_x = math.atan2(t0, t1)
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch_y = math.asin(t2)
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw_z = math.atan2(t3, t4)
+
+    return roll_x, pitch_y, yaw_z  # in radians
