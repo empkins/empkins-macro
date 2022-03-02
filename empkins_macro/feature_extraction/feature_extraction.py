@@ -5,15 +5,20 @@ import pandas as pd
 
 
 def extract_generic_features(
-    data: pd.DataFrame, feature_dict: Dict[str, Union[Dict[str, Any], Sequence[Dict[str, Any]]]]
+    data: pd.DataFrame,
+    feature_dict: Dict[str, Union[Dict[str, Any], Sequence[Dict[str, Any]]]],
 ) -> pd.DataFrame:
     import empkins_macro.feature_extraction.generic as generic
 
     feature_funcs = dict(getmembers(generic, isfunction))
-    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
+    feature_funcs = {
+        key: val for key, val in feature_funcs.items() if not str(key).startswith("_")
+    }
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert (
+            feature_name in feature_funcs.keys()
+        ), f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -25,15 +30,21 @@ def extract_generic_features(
     return result_data
 
 
-def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
+def extract_expert_features(
+    data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]]
+) -> pd.DataFrame:
     import empkins_macro.feature_extraction.body_posture_expert as expert
 
     feature_funcs = dict(getmembers(expert, isfunction))
-    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
+    feature_funcs = {
+        key: val for key, val in feature_funcs.items() if not str(key).startswith("_")
+    }
 
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert (
+            feature_name in feature_funcs.keys()
+        ), f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -43,6 +54,18 @@ def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])
     result_data = result_data.sort_index()
     return result_data
+
+
+def extract_temporal_features(data: pd.DataFrame) -> pd.DataFrame:
+    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
+
+    return spatio_temporal.temporal_features(data)
+
+
+def extract_spatial_features(data: pd.DataFrame) -> pd.DataFrame:
+    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
+
+    return spatio_temporal.spatial_features(data)
 
 
 def clean_features(data: pd.DataFrame) -> pd.DataFrame:
