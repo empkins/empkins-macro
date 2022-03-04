@@ -3,6 +3,8 @@ from typing import Any, Dict, Sequence, Union
 
 import pandas as pd
 
+import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
+
 
 def extract_generic_features(
     data: pd.DataFrame,
@@ -56,10 +58,15 @@ def extract_expert_features(
     return result_data
 
 
-def extract_temporal_features(data: pd.DataFrame) -> pd.DataFrame:
-    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
+def extract_spatio_temporal_features(
+    data: pd.DataFrame,
+) -> spatio_temporal.StrideDetection:
 
-    return spatio_temporal.temporal_features(data)
+    stride_detection = spatio_temporal.StrideDetection(data)
+    stride_detection.temporal_features()
+    stride_detection.spatial_features()
+
+    return stride_detection
 
 
 def extract_spatial_features(data: pd.DataFrame) -> pd.DataFrame:
