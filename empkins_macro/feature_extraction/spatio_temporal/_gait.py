@@ -12,8 +12,8 @@ class StrideDetection:
     joint_data = pd.DataFrame
     _min_vel_event_list: Dict[str, pd.DataFrame]
     _sequence_list: Dict[str, pd.DataFrame]
-    temporal_features: Dict[str, pd.DataFrame]
-    spatial_features: Dict[str, pd.DataFrame]
+    temporal_features: pd.DataFrame
+    spatial_features: pd.DataFrame
 
     def __init__(self, data: pd.DataFrame, joint_data: pd.DataFrame):
         self.data = data
@@ -28,7 +28,9 @@ class StrideDetection:
             sampling_rate_hz=sampling_rate,  # calculations were done in seconds not samples
         )
 
-        self.temporal_features = temporal_paras.parameters_
+        self.temporal_features = pd.concat(
+            temporal_paras.parameters_, names=["side", "s_id"]
+        )
 
     def spatial_features(self, sampling_rate: float = 60):
         # convert to match gaitmap definition
@@ -121,10 +123,13 @@ class StrideDetection:
             )
         )
 
-        self.spatial_features = {
-            "left": paramater_df_l,
-            "right": paramater_df_r,
-        }
+        self.spatial_features = pd.concat(
+            {
+                "left": paramater_df_l,
+                "right": paramater_df_r,
+            },
+            names=["side", "s_id"],
+        )
 
     def _stride_detection(self):
 
@@ -364,6 +369,7 @@ def _calc_hip_turning_angle(orientations: pd.DataFrame) -> pd.Series:
 
 
 def _get_stride_events(foot_contacts: pd.DataFrame) -> pd.DataFrame:
+    # change from 1 (contact to ground) to 0 (no ground contact) is possible initial contact (ic)
     diff_heel = np.ediff1d(foot_contacts["heel"], to_end=0)
     diff_heel = pd.DataFrame(diff_heel)
     diff_heel.index = foot_contacts.index
@@ -383,6 +389,7 @@ def _clean_stride_events(
     segment_data: pd.DataFrame, stride_events: pd.DataFrame, thres: float = 50
 ) -> pd.DataFrame:
 
+    # change of contact is no stride event when gyr norm is low
     mask_gyr = segment_data["gyr"].apply(np.linalg.norm, axis=1) > thres
 
     ic_cleaned = pd.DataFrame(stride_events["ic"] & mask_gyr)
@@ -399,11 +406,14 @@ def _find_matching_stride_events(stride_events: pd.DataFrame) -> pd.DataFrame:
 
     positive = (stride_events["tc"] - stride_events["ic"]) > 0
 
+    # does the number of stride events match and the ic event is always after the tc event
     if diff == 0 & positive.count() == 0:
         return stride_events
 
+    # shift tc by -1
     stride_events["tc_shifted"] = stride_events["tc"].shift(-1)
 
+    # find ic in between tc(x) and tc(x-1)
     stride_events["ic"] = pd.DataFrame(
         [
             stride_events.query("@tc < ic < @tc_shifted")["ic"].values
@@ -474,6 +484,7 @@ def _build_min_vel_event_list(
 
 def _get_gait_sequence(min_vel_events: pd.DataFrame) -> pd.DataFrame:
 
+    # find breaks in index
     min_vel_events = min_vel_events.assign(
         cont=np.ediff1d(min_vel_events.index, to_begin=1)
     )
@@ -488,9 +499,11 @@ def _get_gait_sequence(min_vel_events: pd.DataFrame) -> pd.DataFrame:
 
     min_vel_events["end_shifted"] = min_vel_events["end"].shift(1)
 
+    # get start and end of all "middle" sequences
     sequ = min_vel_events[min_vel_events["cont"] > 1][["start", "end_shifted"]]
     sequ.rename({"end_shifted": "end"}, inplace=True, axis=1)
 
+    # add first start and last end
     sequ = sequ.append(pd.DataFrame([[np.nan, np.nan]], columns=["start", "end"]))
     sequ["start"] = sequ["start"].shift(1, fill_value=min_vel_events.iloc[0]["start"])
     sequ.iloc[-1]["end"] = min_vel_events.iloc[-1]["end"]

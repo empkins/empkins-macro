@@ -1,7 +1,6 @@
 from inspect import getmembers, isfunction
 from typing import Any, Dict, Sequence, Union
 
-import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
 import pandas as pd
 
 
@@ -59,7 +58,8 @@ def extract_expert_features(
 
 def extract_spatio_temporal_features(
     data: pd.DataFrame, joint_data: pd.DataFrame
-) -> spatio_temporal.StrideDetection:
+) -> pd.DataFrame:
+    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
 
     stride_detection = spatio_temporal.StrideDetection(data, joint_data)
     stride_detection.temporal_features()
