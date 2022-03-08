@@ -3,18 +3,23 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from gaitmap.parameters import TemporalParameterCalculation, SpatialParameterCalculation
+from gaitmap.utils.rotations import find_angle_between_orientations
+from scipy.spatial.transform import Rotation
 
 
 class StrideDetection:
     data = pd.DataFrame
+    joint_data = pd.DataFrame
     _min_vel_event_list: Dict[str, pd.DataFrame]
     _sequence_list: Dict[str, pd.DataFrame]
     temporal_features: Dict[str, pd.DataFrame]
     spatial_features: Dict[str, pd.DataFrame]
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame, joint_data: pd.DataFrame):
         self.data = data
+        self.joint_data = joint_data
         self._stride_detection()
+        self._clean_min_vel_event_list()
 
     def temporal_features(self, sampling_rate: float = 1):
         temporal_paras = TemporalParameterCalculation()
@@ -25,17 +30,17 @@ class StrideDetection:
 
         self.temporal_features = temporal_paras.parameters_
 
-    def spatial_features(self, sampling_rate: float = 60, turn_thres: float = 100):
+    def spatial_features(self, sampling_rate: float = 60):
         # convert to match gaitmap definition
         df_left = _convert_position_and_orientation(
             self.data["LeftFoot"],
             self._min_vel_event_list["left"],
-            _get_gait_sequence(self._min_vel_event_list["left"]),
+            self._sequence_list["left"],
         )
         df_right = _convert_position_and_orientation(
             self.data["RightFoot"],
             self._min_vel_event_list["right"],
-            _get_gait_sequence(self._min_vel_event_list["right"]),
+            self._sequence_list["right"],
         )
 
         # match to sampling rate
@@ -69,14 +74,56 @@ class StrideDetection:
             sampling_rate_hz=sampling_rate,
         )
 
-        # TODO omit temporal with turning angle > 100 as well
+        paramater_df_l = spatial_paras_l.parameters_
+        paramater_df_r = spatial_paras_r.parameters_
+
+        paramater_df_l = paramater_df_l.join(
+            _calc_max_knee_flexion(
+                self.joint_data["jLeftKnee"]["ang"], self._min_vel_event_list["left"]
+            ),
+        )
+        paramater_df_r = paramater_df_r.join(
+            _calc_max_knee_flexion(
+                self.joint_data["jRightKnee"]["ang"], self._min_vel_event_list["right"]
+            )
+        )
+
+        paramater_df_l = paramater_df_l.join(
+            _calc_min_knee_flexion(
+                self.joint_data["jLeftKnee"]["ang"], self._min_vel_event_list["left"]
+            ),
+        )
+        paramater_df_r = paramater_df_r.join(
+            _calc_min_knee_flexion(
+                self.joint_data["jRightKnee"]["ang"], self._min_vel_event_list["right"]
+            )
+        )
+
+        paramater_df_l = paramater_df_l.join(
+            _calc_max_arm_flexion(
+                self.joint_data["jLeftElbow"]["ang"], self._min_vel_event_list["left"]
+            ),
+        )
+        paramater_df_r = paramater_df_r.join(
+            _calc_max_arm_flexion(
+                self.joint_data["jRightElbow"]["ang"], self._min_vel_event_list["right"]
+            )
+        )
+
+        paramater_df_l = paramater_df_l.join(
+            _calc_min_arm_flexion(
+                self.joint_data["jLeftElbow"]["ang"], self._min_vel_event_list["left"]
+            ),
+        )
+        paramater_df_r = paramater_df_r.join(
+            _calc_min_arm_flexion(
+                self.joint_data["jRightElbow"]["ang"], self._min_vel_event_list["right"]
+            )
+        )
+
         self.spatial_features = {
-            "left": spatial_paras_l.parameters_[
-                abs(spatial_paras_l.parameters_["turning_angle"]) < turn_thres
-            ],
-            "right": spatial_paras_r.parameters_[
-                abs(spatial_paras_r.parameters_["turning_angle"]) < turn_thres
-            ],
+            "left": paramater_df_l,
+            "right": paramater_df_r,
         }
 
     def _stride_detection(self):
@@ -106,19 +153,64 @@ class StrideDetection:
         min_vel_event_list = {
             "left": _build_min_vel_event_list(
                 stride_event_times["left"], min_vel["left"]
-            ).dropna(),
+            ),
             "right": _build_min_vel_event_list(
                 stride_event_times["right"], min_vel["right"]
-            ).dropna(),
+            ),
+        }
+
+        self._min_vel_event_list = min_vel_event_list
+
+    def _clean_min_vel_event_list(self, turning_thres: float = 20):
+
+        # drop invalid strides, either tc or ic was not detected
+        self._min_vel_event_list = {
+            "left": self._min_vel_event_list["left"].dropna(),
+            "right": self._min_vel_event_list["right"].dropna(),
+        }
+
+        # convert to match gaitmap definition
+        df_left = _convert_position_and_orientation(
+            self.data["Pelvis"],
+            self._min_vel_event_list["left"],
+            _get_gait_sequence(self._min_vel_event_list["left"]),
+        )
+        df_right = _convert_position_and_orientation(
+            self.data["Pelvis"],
+            self._min_vel_event_list["right"],
+            _get_gait_sequence(self._min_vel_event_list["right"]),
+        )
+
+        # drop turning strides (turning angle > thres)
+        self._min_vel_event_list["left"]["hip_turn"] = _calc_hip_turning_angle(
+            df_left["ori"]
+        )
+        self._min_vel_event_list["right"]["hip_turn"] = _calc_hip_turning_angle(
+            df_right["ori"]
+        )
+
+        self._min_vel_event_list = {
+            "left": self._min_vel_event_list["left"][
+                self._min_vel_event_list["left"]["hip_turn"] < turning_thres
+            ],
+            "right": self._min_vel_event_list["right"][
+                self._min_vel_event_list["right"]["hip_turn"] < turning_thres
+            ],
+        }
+
+        self._sequence_list = {
+            "left": _get_gait_sequence(self._min_vel_event_list["left"]),
+            "right": _get_gait_sequence(self._min_vel_event_list["right"]),
         }
 
         print(
-            "{} left and {} right strides detected.".format(
-                len(min_vel_event_list["left"]), len(min_vel_event_list["right"])
+            "{} left and {} right strides detected. ({}/{} bouts)".format(
+                len(self._min_vel_event_list["left"]),
+                len(self._min_vel_event_list["right"]),
+                len(self._sequence_list["left"]),
+                len(self._sequence_list["right"]),
             )
         )
-
-        self._min_vel_event_list = min_vel_event_list
 
 
 def _convert_position_and_orientation(
@@ -184,6 +276,91 @@ def _convert_position_and_orientation(
     )
 
     return cleaned_data
+
+
+def _calc_max_knee_flexion(
+    joint_angle: pd.DataFrame, min_vel_event_list: pd.DataFrame
+) -> pd.DataFrame:
+    angle = pd.DataFrame(
+        [
+            joint_angle[start:end]["z"].max()
+            for start, end in zip(
+                min_vel_event_list["start"], min_vel_event_list["end"]
+            )
+        ],
+        index=min_vel_event_list.index,
+        columns=["max_knee_flexion"],
+    )
+
+    return angle
+
+
+def _calc_min_knee_flexion(
+    joint_angle: pd.DataFrame, min_vel_event_list: pd.DataFrame
+) -> pd.DataFrame:
+    angle = pd.DataFrame(
+        [
+            joint_angle[start:end]["z"].min()
+            for start, end in zip(
+                min_vel_event_list["start"], min_vel_event_list["end"]
+            )
+        ],
+        index=min_vel_event_list.index,
+        columns=["min_knee_flexion"],
+    )
+
+    return angle
+
+
+def _calc_max_arm_flexion(
+    joint_angle: pd.DataFrame, min_vel_event_list: pd.DataFrame
+) -> pd.DataFrame:
+    angle = pd.DataFrame(
+        [
+            joint_angle[start:end]["z"].max()
+            for start, end in zip(
+                min_vel_event_list["start"], min_vel_event_list["end"]
+            )
+        ],
+        index=min_vel_event_list.index,
+        columns=["max_arm_flexion"],
+    )
+
+    return angle
+
+
+def _calc_min_arm_flexion(
+    joint_angle: pd.DataFrame, min_vel_event_list: pd.DataFrame
+) -> pd.DataFrame:
+    angle = pd.DataFrame(
+        [
+            joint_angle[start:end]["z"].min()
+            for start, end in zip(
+                min_vel_event_list["start"], min_vel_event_list["end"]
+            )
+        ],
+        index=min_vel_event_list.index,
+        columns=["min_arm_flexion"],
+    )
+
+    return angle
+
+
+def _calc_hip_turning_angle(orientations: pd.DataFrame) -> pd.Series:
+    start = orientations.groupby(level="s_id").first()
+    end = orientations.groupby(level="s_id").last()
+    angles = pd.Series(
+        np.rad2deg(
+            find_angle_between_orientations(
+                Rotation.from_quat(end.to_numpy()),
+                Rotation.from_quat(start.to_numpy()),
+                np.asarray([0, 0, 1]),
+            )
+        ),
+        index=start.index,
+    )
+
+    return angles
 
 
 def _get_stride_events(foot_contacts: pd.DataFrame) -> pd.DataFrame:
