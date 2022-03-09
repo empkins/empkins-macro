@@ -238,14 +238,8 @@ def _convert_position_and_orientation(
         dataframe with renamed columns and new index
 
     """
-    cleaned_data = pd.DataFrame()
 
-    # cut to valid region
-    for start, end in zip(sequence_list["start"], sequence_list["end"]):
-        cleaned_data = cleaned_data.append(data[start:end])
-
-        # omit last sample
-        cleaned_data = cleaned_data.iloc[:-1]
+    cleaned_data = _cut_data(data, sequence_list)
 
     # construct index
     s_id = []
@@ -281,6 +275,19 @@ def _convert_position_and_orientation(
     )
 
     return cleaned_data
+
+
+def _cut_data(data: pd.DataFrame, sequence_list: pd.DataFrame) -> pd.DataFrame:
+    cut_data = pd.DataFrame()
+
+    # cut to valid region
+    for start, end in zip(sequence_list["start"], sequence_list["end"]):
+        cut_data = cut_data.append(data[start:end])
+
+        # omit last sample
+        cut_data = cut_data.iloc[:-1]
+
+    return cut_data
 
 
 def _calc_max_knee_flexion(
