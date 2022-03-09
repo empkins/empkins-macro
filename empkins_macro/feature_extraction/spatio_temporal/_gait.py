@@ -35,12 +35,12 @@ class StrideDetection:
     def spatial_features(self, sampling_rate: float = 60):
         # convert to match gaitmap definition
         df_left = _convert_position_and_orientation(
-            self.data["LeftFoot"],
+            self.data["LeftFoot"][["pos", "ori"]],
             self._min_vel_event_list["left"],
             self._sequence_list["left"],
         )
         df_right = _convert_position_and_orientation(
-            self.data["RightFoot"],
+            self.data["RightFoot"][["pos", "ori"]],
             self._min_vel_event_list["right"],
             self._sequence_list["right"],
         )
@@ -174,7 +174,6 @@ class StrideDetection:
             "right": self._min_vel_event_list["right"].dropna(),
         }
 
-        # convert to match gaitmap definition
         df_left = _convert_position_and_orientation(
             self.data["Pelvis"],
             self._min_vel_event_list["left"],
