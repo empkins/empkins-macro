@@ -21,7 +21,7 @@ class StrideDetection:
         self._stride_detection()
         self._clean_min_vel_event_list()
 
-    def temporal_features(self, sampling_rate: float = 1):
+    def calc_temporal_features(self, sampling_rate: float = 1):
         temporal_paras = TemporalParameterCalculation()
         temporal_paras = temporal_paras.calculate(
             stride_event_list=self._min_vel_event_list,
@@ -32,7 +32,7 @@ class StrideDetection:
             temporal_paras.parameters_, names=["side", "s_id"]
         )
 
-    def spatial_features(self, sampling_rate: float = 60):
+    def calc_spatial_features(self, sampling_rate: float = 60):
         # convert to match gaitmap definition
         df_left = _convert_position_and_orientation(
             self.data["LeftFoot"][["pos", "ori"]],
@@ -166,7 +166,7 @@ class StrideDetection:
 
         self._min_vel_event_list = min_vel_event_list
 
-    def _clean_min_vel_event_list(self, turning_thres: float = 20):
+    def _clean_min_vel_event_list(self, turning_thres: float = 10):
 
         # drop invalid strides, either tc or ic was not detected
         self._min_vel_event_list = {
@@ -195,10 +195,10 @@ class StrideDetection:
 
         self._min_vel_event_list = {
             "left": self._min_vel_event_list["left"][
-                self._min_vel_event_list["left"]["hip_turn"] < turning_thres
+                abs(self._min_vel_event_list["left"]["hip_turn"]) < turning_thres
             ],
             "right": self._min_vel_event_list["right"][
-                self._min_vel_event_list["right"]["hip_turn"] < turning_thres
+                abs(self._min_vel_event_list["right"]["hip_turn"]) < turning_thres
             ],
         }
 
@@ -419,10 +419,12 @@ def _find_matching_stride_events(stride_events: pd.DataFrame) -> pd.DataFrame:
     # shift tc by -1
     stride_events["tc_shifted"] = stride_events["tc"].shift(-1)
 
+    # print(stride_events)
+
     # find ic in between tc(x) and tc(x-1)
     stride_events["ic"] = pd.DataFrame(
         [
-            stride_events.query("@tc < ic < @tc_shifted")["ic"].values
+            stride_events.query("@tc < ic < @tc_shifted")["ic"].head(1).values
             for tc, tc_shifted in zip(stride_events["tc"], stride_events["tc_shifted"])
         ]
     )
