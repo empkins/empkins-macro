@@ -4,6 +4,7 @@ from typing import Any, Dict, Sequence, Union
 import pandas as pd
 
 from empkins_macro.feature_extraction.spatio_temporal import StrideDetection
+from empkins_macro.feature_extraction.tug._tug import TUG
 
 
 def extract_generic_features(
@@ -69,6 +70,12 @@ def extract_spatio_temporal_features(data: pd.DataFrame) -> StrideDetection:
 
     return stride_detection
 
+def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:
+
+    tug = TUG(data)
+    tug.extract_tug_features()
+
+    return tug.features
 
 def clean_features(data: pd.DataFrame) -> pd.DataFrame:
     """Clean extracted features and drop features that did not produce any output (i.e., NaN output).
