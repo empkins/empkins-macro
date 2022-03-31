@@ -11,49 +11,12 @@ from scipy.signal import find_peaks
 from scipy.spatial.transform import Rotation
 
 
-def _get_stride_events_new(data: pd.DataFrame, side: str) -> pd.DataFrame:
-    # maximum distance between feet is possible stride event tc for foot with angle < 0 and ic for foot with angle > 0
-    dist = (data["LeftFoot"]["pos"] - data["RightFoot"]["pos"]).apply(
-        np.linalg.norm, axis=1
-    )
-
-    if side == "left":
-        data_one_foot = data["LeftFoot"]
-    else:
-        data_one_foot = data["RightFoot"]
-
-    forward = pd.DataFrame(
-        Rotation.from_quat(data_one_foot["ori"].to_numpy()).apply([1, 0, 0]),
-        columns=list("xyz"),
-        index=data_one_foot["ori"].index,
-    )
-    floor_angle = (
-        np.rad2deg(find_unsigned_3d_angle(forward.to_numpy(), np.array([0, 0, 1]))) - 90
-    )
-    floor_angle = pd.Series(floor_angle, index=forward.index)
-
-    peaks, _ = find_peaks(dist, height=0.4)
-
-    angle_at_event = floor_angle.iloc[peaks]
-
-    tc = pd.Series(angle_at_event[angle_at_event < 0].index)
-    ic = pd.Series(angle_at_event[angle_at_event >= 0].index)
-
-    return pd.concat((ic, tc), keys=["ic", "tc"], axis=1)
-
-
-def _calc_cadence(df : pd.DataFrame) -> pd.Series:
-    return pd.Series(df["gait_velocity"] / df["stride_length"], name="cadence")
-
-
 class StrideDetection:
     data = pd.DataFrame
     joint_data = pd.DataFrame
     _min_vel_event_list: Dict[str, pd.DataFrame]
     _sequence_list: Dict[str, pd.DataFrame]
     features: pd.DataFrame
-
-    # TODO temporal features bug
 
     def __init__(self, data: pd.DataFrame, joint_data: pd.DataFrame):
         self.data = data
@@ -124,13 +87,8 @@ class StrideDetection:
         paramater_df_l = spatial_paras_l.parameters_
         paramater_df_r = spatial_paras_r.parameters_
 
-        paramater_df_l = paramater_df_l.join(
-            _calc_cadence(paramater_df_l)
-        )
-        paramater_df_r = paramater_df_r.join(
-            _calc_cadence(paramater_df_r)
-        )
-
+        paramater_df_l = paramater_df_l.join(_calc_cadence(paramater_df_l))
+        paramater_df_r = paramater_df_r.join(_calc_cadence(paramater_df_r))
 
         paramater_df_l = paramater_df_l.join(
             _calc_max_knee_flexion(
@@ -195,23 +153,10 @@ class StrideDetection:
 
     def _stride_detection(self):
 
-        # stride_events = {
-        #    "left": _get_stride_events(self.data["FootContacts"]["left"]),
-        #    "right": _get_stride_events(self.data["FootContacts"]["right"]),
-        # }
-
-        # TODO implement better event detection
         stride_event_times = {
             "left": _get_stride_events_new(self.data, "left"),
             "right": _get_stride_events_new(self.data, "right"),
         }
-
-        # stride_events = {
-        #    "left": _clean_stride_events(self.data["LeftFoot"], stride_events["left"]),
-        #    "right": _clean_stride_events(
-        #        self.data["RightFoot"], stride_events["right"]
-        #    ),
-        # }
 
         stride_event_times = {
             "left": _find_matching_stride_events(stride_event_times["left"]),
@@ -234,7 +179,7 @@ class StrideDetection:
 
         self._min_vel_event_list = min_vel_event_list
 
-    def _clean_min_vel_event_list(self, turning_thres: float = 5, time_thres = 2):
+    def _clean_min_vel_event_list(self, turning_thres: float = 5, time_thres=2):
 
         # drop invalid strides, either tc or ic was not detected
         self._min_vel_event_list = {
@@ -270,15 +215,23 @@ class StrideDetection:
             ],
         }
 
-        # minimum gait_velocity
-        self._min_vel_event_list = {
-            "left": self._min_vel_event_list["left"][
-                    (self._min_vel_event_list["left"]["end"] - self._min_vel_event_list["left"]["start"]) < time_thres
-                ],
-            "right": self._min_vel_event_list["right"][
-                (self._min_vel_event_list["right"]["end"] - self._min_vel_event_list["right"]["start"]) < time_thres
-                ],
-        }
+        # # minimum gait_velocity
+        # self._min_vel_event_list = {
+        #     "left": self._min_vel_event_list["left"][
+        #         (
+        #             self._min_vel_event_list["left"]["end"]
+        #             - self._min_vel_event_list["left"]["start"]
+        #         )
+        #         < time_thres
+        #     ],
+        #     "right": self._min_vel_event_list["right"][
+        #         (
+        #             self._min_vel_event_list["right"]["end"]
+        #             - self._min_vel_event_list["right"]["start"]
+        #         )
+        #         < time_thres
+        #     ],
+        # }
 
         self._sequence_list = {
             "left": _get_gait_sequence(self._min_vel_event_list["left"]),
@@ -323,7 +276,10 @@ def _convert_position_and_orientation(
     sample = []
 
     min_vel_event_list = min_vel_event_list.copy()
-    min_vel_event_list["num_samples"] = [len(data.loc[start:end]) for start, end in zip(min_vel_event_list["start"],min_vel_event_list["end"])]
+    min_vel_event_list["num_samples"] = [
+        len(data.loc[start:end])
+        for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+    ]
 
     for idx, row in min_vel_event_list.iterrows():
         s_id.append(np.full(int(row["num_samples"]), idx))
@@ -333,7 +289,6 @@ def _convert_position_and_orientation(
     sample = np.concatenate(sample)
 
     multi_index = pd.MultiIndex.from_arrays((s_id, sample), names=["s_id", "sample"])
-
 
     if len(cleaned_data) != len(multi_index):
         raise ValueError(
@@ -359,7 +314,7 @@ def _cut_data(data: pd.DataFrame, sequence_list: pd.DataFrame) -> pd.DataFrame:
     # cut to valid region
     for start, end in zip(sequence_list["start"], sequence_list["end"]):
         cut_data = cut_data.append(data.loc[start:end])
-        #cut_data = cut_data.iloc[:-1]
+        # cut_data = cut_data.iloc[:-1]
 
     return cut_data
 
@@ -449,6 +404,7 @@ def _calc_hip_turning_angle(orientations: pd.DataFrame) -> pd.Series:
     return angles
 
 
+# deprecated
 def _get_stride_events(foot_contacts: pd.DataFrame) -> pd.DataFrame:
     # change from 1 (contact to ground) to 0 (no ground contact) is possible initial contact (ic)
     diff_heel = np.ediff1d(foot_contacts["heel"], to_end=0)
@@ -464,6 +420,41 @@ def _get_stride_events(foot_contacts: pd.DataFrame) -> pd.DataFrame:
     tc.columns = ["tc"]
 
     return ic.join(tc)
+
+
+def _get_stride_events_new(data: pd.DataFrame, side: str) -> pd.DataFrame:
+    # maximum distance between feet is possible stride event tc for foot with angle < 0 and ic for foot with angle > 0
+    dist = (data["LeftFoot"]["pos"] - data["RightFoot"]["pos"]).apply(
+        np.linalg.norm, axis=1
+    )
+
+    if side == "left":
+        data_one_foot = data["LeftFoot"]
+    else:
+        data_one_foot = data["RightFoot"]
+
+    forward = pd.DataFrame(
+        Rotation.from_quat(data_one_foot["ori"].to_numpy()).apply([1, 0, 0]),
+        columns=list("xyz"),
+        index=data_one_foot["ori"].index,
+    )
+    floor_angle = (
+        np.rad2deg(find_unsigned_3d_angle(forward.to_numpy(), np.array([0, 0, 1]))) - 90
+    )
+    floor_angle = pd.Series(floor_angle, index=forward.index)
+
+    peaks, _ = find_peaks(dist, height=0.4, prominence=0.2)
+
+    angle_at_event = floor_angle.iloc[peaks]
+
+    tc = pd.Series(angle_at_event[angle_at_event < 0].index)
+    ic = pd.Series(angle_at_event[angle_at_event >= 0].index)
+
+    return pd.concat((ic, tc), keys=["ic", "tc"], axis=1)
+
+
+def _calc_cadence(df: pd.DataFrame) -> pd.Series:
+    return pd.Series(df["gait_velocity"] / df["stride_length"], name="cadence")
 
 
 def _clean_stride_events(
@@ -483,12 +474,12 @@ def _clean_stride_events(
 
 
 def _find_matching_stride_events(stride_events: pd.DataFrame) -> pd.DataFrame:
-    #diff = stride_events["ic"].count() - stride_events["tc"].count()
+    # diff = stride_events["ic"].count() - stride_events["tc"].count()
 
-    #positive = (stride_events["tc"] - stride_events["ic"]) > 0
+    # positive = (stride_events["tc"] - stride_events["ic"]) > 0
 
     # does the number of stride events match and the ic event is always after the tc event
-    #if diff == 0 & positive.count() == 0:
+    # if diff == 0 & positive.count() == 0:
     #    return stride_events
 
     # shift tc by -1
