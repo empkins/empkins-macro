@@ -1,12 +1,19 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 
 from empkins_macro.feature_extraction._utils import _extract_body_part
-from empkins_macro.feature_extraction.body_posture_expert._utils import _INDEX_LEVELS, _INDEX_LEVELS_OUT
+from empkins_macro.feature_extraction.body_posture_expert._utils import (
+    _INDEX_LEVELS,
+    _INDEX_LEVELS_OUT,
+)
 
 
-def absolute_movement(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
-    data_format = "global_pose"
+def absolute_movement(
+    data: pd.DataFrame, data_format: Optional[str] = "global_pose", **kwargs
+) -> pd.DataFrame:
+
     channel = "pos"
     axis = "norm"
     name = "absolute_movement"
@@ -19,7 +26,9 @@ def absolute_movement(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     out = out.unstack("time")
     out = out.diff(axis=1).abs().sum().mean()
     out = pd.Series([out])
-    out.index = pd.MultiIndex.from_tuples([(body_part_name, name, channel, axis, name)], names=_INDEX_LEVELS)
+    out.index = pd.MultiIndex.from_tuples(
+        [(body_part_name, name, channel, axis, name)], names=_INDEX_LEVELS
+    )
     out = out.reorder_levels(_INDEX_LEVELS_OUT)
 
     return pd.DataFrame(out, columns=["data"])

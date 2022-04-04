@@ -7,8 +7,6 @@ from biopsykit.utils._datatype_validation_helper import _assert_len_list
 from sklearn.preprocessing import minmax_scale
 from tsfresh.feature_extraction.feature_calculators import number_crossing_m
 
-from empkins_io.sensors.motion_capture.body_parts import get_all_body_parts
-
 
 def norm(data: pd.DataFrame) -> pd.DataFrame:
     out = np.linalg.norm(data, axis=1)
@@ -22,13 +20,15 @@ def euclidean_distance(
     channel: Optional[str] = "pos_global",
 ) -> pd.DataFrame:
     _assert_len_list(body_part, 2)
-    assert all(part in get_all_body_parts() for part in body_part)
+    # assert all(part in get_all_body_parts(system="xsens") for part in body_part)
 
     data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
     # compute axis-wise difference
     data = data.groupby("axis", axis=1).diff().dropna(axis=1)
     # distance = l2 norm
-    distance = pd.DataFrame(np.linalg.norm(data, axis=1), index=data.index, columns=["data"])
+    distance = pd.DataFrame(
+        np.linalg.norm(data, axis=1), index=data.index, columns=["data"]
+    )
     return distance
 
 
@@ -146,7 +146,9 @@ def abs_energy_norm(data: pd.DataFrame) -> pd.Series:
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
-def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
+def fft_aggregated(
+    data: pd.DataFrame, param: Optional[Sequence[str]] = None
+) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import fft_aggregated
 
     if param is None:
@@ -164,7 +166,9 @@ def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) ->
     return out
 
 
-def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
+def fft_aggregated_norm(
+    data: pd.DataFrame, param: Optional[Sequence[str]] = None
+) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import fft_aggregated
 
     if param is None:
