@@ -46,6 +46,10 @@ class TUG:
             self._calc_tug_time(),
             self._calc_time_to_stand_up(),
             self._calc_first_step_length(),
+            self._calc_min_angle(body_part="Head"),
+            self._calc_mean_angle(body_part="Head"),
+            self._calc_min_angle(body_part="T8"),
+            self._calc_mean_angle(body_part="T8"),
         ]
         self.features = pd.DataFrame(pd.concat(features), columns=["data"])
         self.features.index.name = "features"
@@ -87,6 +91,16 @@ class TUG:
 
         # max between left and right
         return pd.Series(max(left_len, right_len), ["first_step_length"])
+
+    def _calc_mean_angle(self, body_part: str) -> pd.Series:
+        angle = _get_floor_angle(data=self.data["mvnx_segment"][body_part]["ori"])
+
+        return pd.Series(angle.mean(), [f"{body_part}_mean_angle"])
+
+    def _calc_min_angle(self, body_part: str) -> pd.Series:
+        angle = _get_floor_angle(data=self.data["mvnx_segment"][body_part]["ori"])
+
+        return pd.Series(angle.min(), [f"{body_part}_min_angle"])
 
 
 def _get_floor_angle(data: pd.DataFrame) -> pd.Series:
