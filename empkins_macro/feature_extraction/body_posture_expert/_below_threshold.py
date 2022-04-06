@@ -21,14 +21,17 @@ def below_threshold(
     channel: Optional[str] = "vel",
     axis: Optional[str] = "norm",
     threshold: Optional[float] = 0.1,
+    system: Optional[str] = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "below_threshold"
     if kwargs.get("suffix", False):
         name += f"_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(body_part)
-    start_end_below = _below_threshold_per_body_part(data, data_format, body_part, channel, threshold)
+    body_part_name, body_part = _extract_body_part(body_part, system=system)
+    start_end_below = _below_threshold_per_body_part(
+        data, data_format, body_part, channel, threshold
+    )
 
     out = compute_params_from_start_end_time_array(start_end_below, data)
     out = {(body_part_name, name, channel, axis): out}
@@ -39,7 +42,11 @@ def below_threshold(
 
 
 def _below_threshold_per_body_part(
-    data: pd.DataFrame, data_format: str, body_part: Sequence[str], channel: str, threshold: float
+    data: pd.DataFrame,
+    data_format: str,
+    body_part: Sequence[str],
+    channel: str,
+    threshold: float,
 ) -> pd.DataFrame:
     below_thres_list = []
     for part in body_part:
@@ -51,4 +58,5 @@ def _below_threshold_per_body_part(
     out = np.array(below_thres_list)
     out = np.sum(out, axis=0) == len(body_part)
     start_end = bp.utils.array_handling.bool_array_to_start_end_array(out)
+
     return start_end_array_indices_to_time(data, start_end)

@@ -1,6 +1,4 @@
-from itertools import product
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
-import math
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
@@ -15,7 +13,7 @@ from empkins_macro.utils._types import str_t
 
 
 def _sanitize_multicolumn_input(
-    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t]
+    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t], system: str
 ) -> Dict[Tuple, Tuple]:
     _assert_has_columns_any_level(data, [[data_format]])
 
@@ -25,7 +23,7 @@ def _sanitize_multicolumn_input(
         if isinstance(body_parts, str):
             body_parts = [body_parts]
         body_part_dict = dict(
-            [_extract_body_part(body_part) for body_part in body_parts]
+            [_extract_body_part(body_part, system=system) for body_part in body_parts]
         )
         for key, body_parts in body_part_dict.items():
             _assert_has_columns_any_level(data, [body_parts])
@@ -70,10 +68,11 @@ def _apply_func_per_group(
     data_format: str,
     func_name: Callable,
     param_dict: Dict[str, Any],
-    **kwargs
+    system: Optional[str] = "xsens",  # not nice but works for now
+    **kwargs,
 ) -> Dict[Tuple, pd.Series]:
 
-    col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict)
+    col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict, system)
     data = data.loc[:, data_format]
 
     return_dict = {}
@@ -87,13 +86,13 @@ def _apply_func_per_group(
 
 
 def _extract_body_part(
-    body_parts: Union[str, Sequence[str]],
+    body_parts: Union[str, Sequence[str]], system: str
 ) -> Tuple[str, Sequence[str]]:
     if body_parts is None:
-        return "TotalBody", get_all_body_parts()
+        return "TotalBody", get_all_body_parts(system=system)
     if isinstance(body_parts, str):
         if body_parts in get_args(BODY_PART_GROUP):
-            return body_parts, get_body_parts_by_group(body_parts)
+            return body_parts, get_body_parts_by_group(system, body_parts)
         return body_parts, [body_parts]
 
     return "_".join(body_parts), body_parts
