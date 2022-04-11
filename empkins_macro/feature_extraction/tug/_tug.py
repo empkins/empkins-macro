@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from gaitmap.utils.rotations import find_unsigned_3d_angle
@@ -50,6 +52,7 @@ class TUG:
             self._calc_mean_angle(body_part="Head"),
             self._calc_min_angle(body_part="T8"),
             self._calc_mean_angle(body_part="T8"),
+            self._calc_number_of_strides(),
         ]
         self.features = pd.DataFrame(pd.concat(features), columns=["data"])
         self.features.index.name = "features"
@@ -69,16 +72,11 @@ class TUG:
             min(left_stand_up_time, right_stand_up_time), ["time_to_stand_up"]
         )
 
-    def _calc_first_step_length(self, thres: float = 0.4) -> pd.Series:
+    def _calc_first_step_length(self, thres: Optional[float] = 0.4) -> pd.Series:
         left_pos = self.data["mvnx_segment"]["LeftFoot"]["pos"]
         right_pos = self.data["mvnx_segment"]["RightFoot"]["pos"]
 
-        diff = left_pos - right_pos
-        eucl = diff.apply(np.linalg.norm, axis=1)[self.start : self.end]
-
-        peaks, _ = find_peaks(eucl, height=thres, prominence=0.1)
-
-        peak_times = eucl.iloc[peaks]
+        peak_times = get_strides(self.data, thres)
 
         first_step_end = peak_times.index[1]
         # index 1 is the end of the first step
@@ -102,6 +100,9 @@ class TUG:
 
         return pd.Series(angle.min(), [f"{body_part}_min_angle"])
 
+    def _calc_number_of_strides(self, thres: Optional[float] = 0.4) -> pd.Series:
+        return pd.Series(len(get_strides(self.data, thres)), ["num_strides"])
+
 
 def _get_floor_angle(data: pd.DataFrame) -> pd.Series:
     forward = pd.DataFrame(
@@ -117,3 +118,17 @@ def _get_floor_angle(data: pd.DataFrame) -> pd.Series:
 
 def zero_crossings(df: pd.Series):
     return np.where(np.diff(np.signbit(df)))[0]
+
+
+def get_strides(data: pd.DataFrame, thres: float) -> pd.Series:
+    left_pos = data["mvnx_segment"]["LeftFoot"]["pos"]
+    right_pos = data["mvnx_segment"]["RightFoot"]["pos"]
+
+    diff = left_pos - right_pos
+    eucl = diff.apply(np.linalg.norm, axis=1)
+
+    peaks, _ = find_peaks(eucl, height=thres, prominence=0.1)
+
+    peak_times = eucl.iloc[peaks]
+
+    return peak_times

@@ -22,7 +22,7 @@ param_dict_gait_all = {
     "min_knee_flexion": ["SpatialFeatures"],
     "max_arm_flexion": ["SpatialFeatures"],
     "min_arm_flexion": ["SpatialFeatures"],
-    "cadence": ["SpatialFeatures"]
+    "cadence": ["SpatialFeatures"],
 }
 
 feature_dict_all = {
@@ -93,9 +93,7 @@ def extract_spatio_temporal_features(
     import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
     import empkins_macro.feature_extraction.generic as generic
 
-    stride_detection = spatio_temporal.StrideDetection(
-        data["mvnx_segment"], data["mvnx_joint"]
-    )
+    stride_detection = spatio_temporal.StrideDetection(data)
     stride_detection.calc_spatio_temporal_features()
 
     feature_funcs = dict(getmembers(generic, isfunction))
@@ -126,6 +124,10 @@ def extract_spatio_temporal_features(
     result_data = result_data.sort_index()
 
     return result_data, stride_detection
+
+
+def stride_detection(data: pd.DataFrame) -> StrideDetection:
+    return StrideDetection(data)
 
 
 def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:

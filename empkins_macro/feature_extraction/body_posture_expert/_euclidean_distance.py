@@ -35,6 +35,7 @@ def euclidean_distance(
     out_generic = pd.Series(result_dict)
 
     start_end = _euclidean_distance_threshold(dist, distance_thres)
+
     out = compute_params_from_start_end_time_array(start_end, data)
     out = pd.concat([out_generic, out])
 

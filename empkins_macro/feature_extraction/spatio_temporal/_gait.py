@@ -13,16 +13,28 @@ from scipy.spatial.transform import Rotation
 
 class StrideDetection:
     data = pd.DataFrame
-    joint_data = pd.DataFrame
     _min_vel_event_list: Dict[str, pd.DataFrame]
     _sequence_list: Dict[str, pd.DataFrame]
     features: pd.DataFrame
 
-    def __init__(self, data: pd.DataFrame, joint_data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame):
         self.data = data
-        self.joint_data = joint_data
         self._stride_detection()
         self._clean_min_vel_event_list()
+
+    @property
+    def gait_data(self) -> pd.DataFrame:
+        return _cut_data(
+            self.data, self._sequence_list["left"]
+        )  # for now just take the left walking bouts, should be changed in the future
+
+    @property
+    def joint_data(self) -> pd.DataFrame:
+        return self.data["mvnx_joint"]
+
+    @property
+    def segment_data(self) -> pd.DataFrame:
+        return self.data["mvnx_segment"]
 
     def calc_spatio_temporal_features(self, sampling_rate: float = 60):
         temporal_paras = TemporalParameterCalculation()
@@ -43,12 +55,12 @@ class StrideDetection:
 
         # convert to match gaitmap definition
         df_left = _convert_position_and_orientation(
-            self.data["LeftFoot"][["pos", "ori"]],
+            self.segment_data["LeftFoot"][["pos", "ori"]],
             self._min_vel_event_list["left"],
             self._sequence_list["left"],
         )
         df_right = _convert_position_and_orientation(
-            self.data["RightFoot"][["pos", "ori"]],
+            self.segment_data["RightFoot"][["pos", "ori"]],
             self._min_vel_event_list["right"],
             self._sequence_list["right"],
         )
@@ -154,8 +166,8 @@ class StrideDetection:
     def _stride_detection(self):
 
         stride_event_times = {
-            "left": _get_stride_events_new(self.data, "left"),
-            "right": _get_stride_events_new(self.data, "right"),
+            "left": _get_stride_events_new(self.segment_data, "left"),
+            "right": _get_stride_events_new(self.segment_data, "right"),
         }
 
         stride_event_times = {
@@ -164,8 +176,12 @@ class StrideDetection:
         }
 
         min_vel = {
-            "left": _get_min_vel(stride_event_times["left"], self.data["LeftFoot"]),
-            "right": _get_min_vel(stride_event_times["right"], self.data["RightFoot"]),
+            "left": _get_min_vel(
+                stride_event_times["left"], self.segment_data["LeftFoot"]
+            ),
+            "right": _get_min_vel(
+                stride_event_times["right"], self.segment_data["RightFoot"]
+            ),
         }
 
         min_vel_event_list = {
@@ -179,7 +195,9 @@ class StrideDetection:
 
         self._min_vel_event_list = min_vel_event_list
 
-    def _clean_min_vel_event_list(self, turning_thres: float = 5, time_thres=2):
+    def _clean_min_vel_event_list(
+        self, turning_thres: float = 5, max_stride_time: float = 2
+    ):
 
         # drop invalid strides, either tc or ic was not detected
         self._min_vel_event_list = {
@@ -188,12 +206,12 @@ class StrideDetection:
         }
 
         df_left = _convert_position_and_orientation(
-            self.data["Pelvis"],
+            self.segment_data["Pelvis"],
             self._min_vel_event_list["left"],
             _get_gait_sequence(self._min_vel_event_list["left"]),
         )
         df_right = _convert_position_and_orientation(
-            self.data["Pelvis"],
+            self.segment_data["Pelvis"],
             self._min_vel_event_list["right"],
             _get_gait_sequence(self._min_vel_event_list["right"]),
         )
@@ -215,23 +233,23 @@ class StrideDetection:
             ],
         }
 
-        # # minimum gait_velocity
-        # self._min_vel_event_list = {
-        #     "left": self._min_vel_event_list["left"][
-        #         (
-        #             self._min_vel_event_list["left"]["end"]
-        #             - self._min_vel_event_list["left"]["start"]
-        #         )
-        #         < time_thres
-        #     ],
-        #     "right": self._min_vel_event_list["right"][
-        #         (
-        #             self._min_vel_event_list["right"]["end"]
-        #             - self._min_vel_event_list["right"]["start"]
-        #         )
-        #         < time_thres
-        #     ],
-        # }
+        # minimum gait_velocity
+        self._min_vel_event_list = {
+            "left": self._min_vel_event_list["left"][
+                (
+                    self._min_vel_event_list["left"]["end"]
+                    - self._min_vel_event_list["left"]["start"]
+                )
+                < max_stride_time
+            ],
+            "right": self._min_vel_event_list["right"][
+                (
+                    self._min_vel_event_list["right"]["end"]
+                    - self._min_vel_event_list["right"]["start"]
+                )
+                < max_stride_time
+            ],
+        }
 
         self._sequence_list = {
             "left": _get_gait_sequence(self._min_vel_event_list["left"]),
