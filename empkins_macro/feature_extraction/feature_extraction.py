@@ -1,5 +1,5 @@
 from inspect import getmembers, isfunction
-from typing import Any, Dict, Sequence, Union, Optional
+from typing import Any, Dict, Sequence, Union, Optional, List
 
 import pandas as pd
 
@@ -27,9 +27,6 @@ param_dict_gait_all = {
 
 feature_dict_all = {
     "mean": [
-        {"data_format": "gait_features", "param_dict": param_dict_gait_all},
-    ],
-    "std": [
         {"data_format": "gait_features", "param_dict": param_dict_gait_all},
     ],
 }
@@ -156,3 +153,21 @@ def clean_features(data: pd.DataFrame) -> pd.DataFrame:
     data = data.unstack("condition").dropna(how="any").stack("condition")
     data = data.reorder_levels(index_order).sort_index()
     return data
+
+
+def relative_to_baseline(
+    df: pd.DataFrame, levels: List[str], test: Optional[str] = "tug"
+) -> pd.DataFrame:
+    index_order = df.index.names
+    columns = df.columns
+
+    df = df.unstack(levels).droplevel(0, axis=1)
+    subtract = df.loc[:, 0]  # trial 0
+    if test == "gait":
+        subtract["metro"] = subtract["pref"]
+    df = df.subtract(subtract, axis=0)
+    df.drop(0, axis=1, inplace=True)
+    return pd.DataFrame(
+        df.stack(levels).reorder_levels(index_order).sort_index(level="subject"),
+        columns=columns,
+    )
