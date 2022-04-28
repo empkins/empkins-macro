@@ -23,16 +23,24 @@ def static_periods(
     window_sec: Optional[int] = 1,
     overlap_percent: Optional[float] = 0.5,
     threshold: Optional[float] = 0.0001,
+    system: Optional[str] = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "static_periods"
     if kwargs.get("suffix", False):
         name += f"_{window_sec}_{overlap_percent}_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(body_part)
+    body_part_name, body_part = _extract_body_part(body_part, system=system)
 
     static_periods_start_end = _static_periods_per_body_part(
-        data, data_format, body_part, channel, sampling_rate, window_sec, overlap_percent, threshold
+        data,
+        data_format,
+        body_part,
+        channel,
+        sampling_rate,
+        window_sec,
+        overlap_percent,
+        threshold,
     )
 
     out = compute_params_from_start_end_time_array(static_periods_start_end, data)
@@ -67,7 +75,10 @@ def _static_periods_per_body_part(
         sp_list.append(sp_arr)
 
     if len(body_part) > 1:
-        sp_list = [sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode() for sp in sp_list]
+        sp_list = [
+            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode()
+            for sp in sp_list
+        ]
         intersec_arr = sp_list[0]
         for sp in sp_list:
             intersec_arr = np.intersect1d(intersec_arr, sp)

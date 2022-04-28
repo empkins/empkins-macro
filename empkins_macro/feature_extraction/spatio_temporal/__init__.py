@@ -1,0 +1,1 @@
+from empkins_macro.feature_extraction.spatio_temporal._gait import StrideDetection
