@@ -1,5 +1,5 @@
 from inspect import getmembers, isfunction
-from typing import Any, Dict, Sequence, Union, Optional, List
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import pandas as pd
 
@@ -39,14 +39,10 @@ def extract_generic_features(
     import empkins_macro.feature_extraction.generic as generic
 
     feature_funcs = dict(getmembers(generic, isfunction))
-    feature_funcs = {
-        key: val for key, val in feature_funcs.items() if not str(key).startswith("_")
-    }
+    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert (
-            feature_name in feature_funcs.keys()
-        ), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -58,21 +54,15 @@ def extract_generic_features(
     return result_data
 
 
-def extract_expert_features(
-    data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]]
-) -> pd.DataFrame:
+def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
     import empkins_macro.feature_extraction.body_posture_expert as expert
 
     feature_funcs = dict(getmembers(expert, isfunction))
-    feature_funcs = {
-        key: val for key, val in feature_funcs.items() if not str(key).startswith("_")
-    }
+    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
 
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert (
-            feature_name in feature_funcs.keys()
-        ), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -87,16 +77,14 @@ def extract_expert_features(
 def extract_spatio_temporal_features(
     data: pd.DataFrame, feature_dict: Optional[Dict[str, Dict[str, Any]]] = None
 ) -> (pd.DataFrame, StrideDetection):
-    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
     import empkins_macro.feature_extraction.generic as generic
+    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
 
     stride_detection = spatio_temporal.StrideDetection(data)
     stride_detection.calc_spatio_temporal_features()
 
     feature_funcs = dict(getmembers(generic, isfunction))
-    feature_funcs = {
-        key: val for key, val in feature_funcs.items() if not str(key).startswith("_")
-    }
+    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
 
     result_list = []
 
@@ -104,17 +92,11 @@ def extract_spatio_temporal_features(
         feature_dict = feature_dict_all
 
     for feature_name, param_list in feature_dict.items():
-        assert (
-            feature_name in feature_funcs.keys()
-        ), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(
-                feature_funcs[feature_name](
-                    data=stride_detection.features, **param_dict
-                )
-            )
+            result_list.append(feature_funcs[feature_name](data=stride_detection.features, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"gait": result_data}, names=["feature_type"])
@@ -155,9 +137,7 @@ def clean_features(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def relative_to_baseline(
-    df: pd.DataFrame, levels: List[str], test: Optional[str] = "tug"
-) -> pd.DataFrame:
+def relative_to_baseline(df: pd.DataFrame, levels: List[str], test: Optional[str] = "tug") -> pd.DataFrame:
     index_order = df.index.names
     columns = df.columns
 

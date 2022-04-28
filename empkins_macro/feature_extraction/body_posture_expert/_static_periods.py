@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -75,10 +75,7 @@ def _static_periods_per_body_part(
         sp_list.append(sp_arr)
 
     if len(body_part) > 1:
-        sp_list = [
-            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode()
-            for sp in sp_list
-        ]
+        sp_list = [sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode() for sp in sp_list]
         intersec_arr = sp_list[0]
         for sp in sp_list:
             intersec_arr = np.intersect1d(intersec_arr, sp)

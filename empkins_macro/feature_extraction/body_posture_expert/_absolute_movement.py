@@ -4,10 +4,7 @@ import numpy as np
 import pandas as pd
 
 from empkins_macro.feature_extraction._utils import _extract_body_part
-from empkins_macro.feature_extraction.body_posture_expert._utils import (
-    _INDEX_LEVELS,
-    _INDEX_LEVELS_OUT,
-)
+from empkins_macro.feature_extraction.body_posture_expert._utils import _INDEX_LEVELS, _INDEX_LEVELS_OUT
 
 
 def absolute_movement(

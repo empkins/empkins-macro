@@ -26,9 +26,7 @@ def euclidean_distance(
     # compute axis-wise difference
     data = data.groupby("axis", axis=1).diff().dropna(axis=1)
     # distance = l2 norm
-    distance = pd.DataFrame(
-        np.linalg.norm(data, axis=1), index=data.index, columns=["data"]
-    )
+    distance = pd.DataFrame(np.linalg.norm(data, axis=1), index=data.index, columns=["data"])
     return distance
 
 
@@ -146,9 +144,7 @@ def abs_energy_norm(data: pd.DataFrame) -> pd.Series:
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
-def fft_aggregated(
-    data: pd.DataFrame, param: Optional[Sequence[str]] = None
-) -> pd.Series:
+def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import fft_aggregated
 
     if param is None:
@@ -166,9 +162,7 @@ def fft_aggregated(
     return out
 
 
-def fft_aggregated_norm(
-    data: pd.DataFrame, param: Optional[Sequence[str]] = None
-) -> pd.Series:
+def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import fft_aggregated
 
     if param is None:

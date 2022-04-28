@@ -7,9 +7,7 @@ _INDEX_LEVELS: Sequence[str] = ["body_part", "type", "channel", "axis", "metric"
 _INDEX_LEVELS_OUT: Sequence[str] = ["body_part", "channel", "type", "metric", "axis"]
 
 
-def start_end_array_indices_to_time(
-    data: pd.DataFrame, start_end: np.ndarray
-) -> pd.DataFrame:
+def start_end_array_indices_to_time(data: pd.DataFrame, start_end: np.ndarray) -> pd.DataFrame:
     if len(start_end) == 0:
         return pd.DataFrame(columns=["start", "end"])
     # end indices are *inclusive*!

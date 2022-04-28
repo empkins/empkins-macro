@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import biopsykit as bp
 import numpy as np
@@ -29,9 +29,7 @@ def below_threshold(
         name += f"_{threshold}"
 
     body_part_name, body_part = _extract_body_part(body_part, system=system)
-    start_end_below = _below_threshold_per_body_part(
-        data, data_format, body_part, channel, threshold
-    )
+    start_end_below = _below_threshold_per_body_part(data, data_format, body_part, channel, threshold)
 
     out = compute_params_from_start_end_time_array(start_end_below, data)
     out = {(body_part_name, name, channel, axis): out}
