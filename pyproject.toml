@@ -6,8 +6,8 @@ authors = ["Robert Richer <robert.richer@fau.de>", "Luca Abel <luca.abel@fau.de>
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
-tsfresh = "^0.18.0"
-biopsykit = {version = "^0.3.0", extras = ["jupyter"]}
+tsfresh = "^0"
+biopsykit = {version = "^0", extras = ["jupyter"]}
 empkins-io = {path = "../empkins-io", develop = true}
 gaitmap = {path = "../gaitmap", develop = true}
 
