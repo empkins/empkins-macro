@@ -7,7 +7,7 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import _INDEX_L
 
 def absolute_movement(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     data_format = "global_pose"
-    channel = "pos"
+    channel = "pos_global"
     axis = "norm"
     name = "absolute_movement"
     body_part_name, body_part = _extract_body_part(kwargs.get("body_part", None))
