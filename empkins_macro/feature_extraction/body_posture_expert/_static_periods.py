@@ -65,9 +65,7 @@ def _static_periods_per_body_part(
 
     sp_list = []
     for part in body_part:
-        print(pd.IndexSlice[data_format, part, channel, :])
         data_slice = data.loc[:, pd.IndexSlice[data_format, part, channel, :]]
-        print(data_slice)
         sp_arr = find_static_moments(
             data_slice,
             window_sec=window_sec,
