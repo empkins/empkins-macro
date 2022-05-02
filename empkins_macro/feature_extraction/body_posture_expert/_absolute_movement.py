@@ -3,17 +3,18 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.feature_extraction._utils import _extract_body_part
 from empkins_macro.feature_extraction.body_posture_expert._utils import _INDEX_LEVELS, _INDEX_LEVELS_OUT
 
 
 def absolute_movement(
-    data: pd.DataFrame, data_format: Optional[str] = "global_pose", system: Optional[str] = "xsens", **kwargs
+    data: pd.DataFrame, system: MOTION_CAPTURE_SYSTEM, data_format: Optional[str] = "global_pose", **kwargs
 ) -> pd.DataFrame:
     channel = "pos_global"
     axis = "norm"
     name = "absolute_movement"
-    body_part_name, body_part = _extract_body_part(kwargs.get("body_part", None), system=system)
+    body_part_name, body_part = _extract_body_part(system=system, body_parts=kwargs.get("body_part", None))
 
     data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
     data = data.stack(["data_format", "body_part", "channel"])

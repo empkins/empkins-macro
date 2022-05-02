@@ -4,6 +4,7 @@ import biopsykit as bp
 import numpy as np
 import pandas as pd
 
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.feature_extraction.base_functions import euclidean_distance as distance
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,
@@ -15,6 +16,7 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
 
 def euclidean_distance(
     data: pd.DataFrame,
+    system: MOTION_CAPTURE_SYSTEM,
     body_part: Sequence[str],
     data_format: Optional[str] = "global_pose",
     channel: Optional[str] = "pos_global",
@@ -37,7 +39,6 @@ def euclidean_distance(
     out = compute_params_from_start_end_time_array(start_end, data)
     out = pd.concat([out_generic, out])
 
-    # out = pd.concat([out_generic])
     out = {("_".join(body_part), name, channel, axis): out}
     out = pd.concat(out, names=_INDEX_LEVELS)
     out = out.reorder_levels(_INDEX_LEVELS_OUT)

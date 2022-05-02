@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from biopsykit.signals.imu.static_moment_detection import find_static_moments
 
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.feature_extraction._utils import _extract_body_part
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,
@@ -15,6 +16,7 @@ from empkins_macro.utils._types import str_t
 
 def static_periods(
     data: pd.DataFrame,
+    system: MOTION_CAPTURE_SYSTEM,
     body_part: str_t,
     sampling_rate: float,
     data_format: Optional[str] = "calc",
@@ -23,14 +25,13 @@ def static_periods(
     window_sec: Optional[int] = 1,
     overlap_percent: Optional[float] = 0.5,
     threshold: Optional[float] = 0.0001,
-    system: Optional[str] = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "static_periods"
     if kwargs.get("suffix", False):
         name += f"_{window_sec}_{overlap_percent}_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(body_part, system=system)
+    body_part_name, body_part = _extract_body_part(system=system, body_parts=body_part)
 
     static_periods_start_end = _static_periods_per_body_part(
         data,
@@ -64,7 +65,9 @@ def _static_periods_per_body_part(
 
     sp_list = []
     for part in body_part:
-        data_slice = data.loc[:, pd.IndexSlice[data_format, [part], channel, :]]
+        print(pd.IndexSlice[data_format, part, channel, :])
+        data_slice = data.loc[:, pd.IndexSlice[data_format, part, channel, :]]
+        print(data_slice)
         sp_arr = find_static_moments(
             data_slice,
             window_sec=window_sec,

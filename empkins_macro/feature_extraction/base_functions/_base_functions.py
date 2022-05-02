@@ -31,31 +31,31 @@ def euclidean_distance(
 
 
 def max_val(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.max(data))
+    out = pd.Series(np.max(data, axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def max_val_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.max(norm)
+    out = np.max(norm, axis=0)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def abs_max(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.max(np.abs(data)))
+    out = pd.Series(np.max(np.abs(data), axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def abs_max_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.max(np.abs(norm))
+    out = np.max(np.abs(norm), axis=0)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def std(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.std(data))
+    out = pd.Series(np.std(data, axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
@@ -67,25 +67,25 @@ def std_norm(data: pd.DataFrame) -> pd.Series:
 
 
 def mean(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.mean(data))
+    out = pd.Series(np.mean(data, axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def mean_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.mean(norm)
+    out = np.mean(norm, axis=0)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def mean_abs(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.mean(np.abs(data)))
+    out = pd.Series(np.mean(np.abs(data), axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def cov(data: pd.DataFrame) -> pd.Series:
-    out = np.std(data) / np.mean(data)
+    out = np.std(data, axis=0) / np.mean(data, axis=0)
     out.index = out.index.get_level_values("axis")
     return out
 
@@ -93,7 +93,7 @@ def cov(data: pd.DataFrame) -> pd.Series:
 def cov_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
     if np.mean(norm) != 0:
-        out = np.std(norm) / np.mean(norm)
+        out = np.std(norm, axis=0) / np.mean(norm, axis=0)
     else:
         out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
@@ -125,7 +125,7 @@ def zero_crossings(data: pd.DataFrame) -> pd.Series:
 
 def mean_crossings_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = number_crossing_m(norm, np.mean(norm).squeeze())
+    out = number_crossing_m(norm, np.mean(norm, axis=0).squeeze())
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
