@@ -66,23 +66,31 @@ def _static_periods_per_body_part(
     sp_list = []
     for part in body_part:
         data_slice = data.loc[:, pd.IndexSlice[data_format, part, channel, :]]
-        sp_arr = find_static_moments(
+        sp_out = find_static_moments(
             data_slice,
             window_sec=window_sec,
             overlap_percent=overlap_percent,
             sampling_rate=sampling_rate,
             threshold=threshold,
         )
-        sp_list.append(sp_arr)
+        sp_list.append(sp_out)
 
     if len(body_part) > 1:
-        sp_list = [sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode() for sp in sp_list]
+        sp_list = [sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1) for sp in sp_list]
+        if any(len(sp) == 0 for sp in sp_list):
+            # If any of the body parts has no static periods, return an empty DataFrame
+            return pd.DataFrame(columns=["start", "end"])
+
+        sp_list = [sp.explode() for sp in sp_list]
         intersec_arr = sp_list[0]
         for sp in sp_list:
+            # Intersect the static periods of each body part
             intersec_arr = np.intersect1d(intersec_arr, sp)
         split_idx = np.where(np.ediff1d(intersec_arr) != 1)[0] + 1
+        # Split the static periods into a list of individual static periods
         sp_arr = np.split(intersec_arr, split_idx)
 
+        # Convert the list of static periods into a DataFrame with the start and end indices
         if np.sum([len(sp) for sp in sp_arr]) == 0:
             return pd.DataFrame(columns=["start", "end"])
 
