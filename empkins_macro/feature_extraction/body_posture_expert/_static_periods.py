@@ -63,6 +63,7 @@ def _static_periods_per_body_part(
 ) -> pd.DataFrame:
 
     sp_list = []
+
     for part in body_part:
         data_slice = data.loc[:, pd.IndexSlice[data_format, [part], channel, :]]
         sp_arr = find_static_moments(
@@ -76,10 +77,11 @@ def _static_periods_per_body_part(
 
     if len(body_part) > 1:
         sp_list = [
-            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode()
+            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode(["start", "end"])
             for sp in sp_list
         ]
         intersec_arr = sp_list[0]
+
         for sp in sp_list:
             intersec_arr = np.intersect1d(intersec_arr, sp)
         split_idx = np.where(np.ediff1d(intersec_arr) != 1)[0] + 1
@@ -90,6 +92,7 @@ def _static_periods_per_body_part(
 
         sp_arr = [(s[0], s[-1]) for s in sp_arr]
         sp_arr = pd.DataFrame(sp_arr, columns=["start", "end"])
+
     else:
         sp_arr = sp_list[0]
 

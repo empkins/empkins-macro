@@ -171,3 +171,14 @@ def relative_to_baseline(
         df.stack(levels).reorder_levels(index_order).sort_index(level="subject"),
         columns=columns,
     )
+
+
+def condition_difference(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.unstack("condition")
+    index_order = df.index.names
+
+    df = df.diff(axis=1)
+    df = df.droplevel(-1, axis=1)
+    df.dropna(inplace=True, axis=1)
+
+    return df.reorder_levels(index_order)
