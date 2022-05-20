@@ -9,7 +9,10 @@ python = ">=3.8,<3.10"
 tsfresh = "^0"
 biopsykit = {git="https://github.com/mad-lab-fau/BioPsyKit.git", branch="main", extras=["jupyter"]}
 empkins-io = {path = "../empkins-io", develop = true}
-gaitmap = {path = "../gaitmap", develop = true}
+gaitmap = {path = "../gaitmap", develop = true, optional = true}
+
+[tool.poetry.extras]
+gaitmap = ["gaitmap"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
