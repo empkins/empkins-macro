@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import pandas as pd
 
-from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.feature_extraction.spatio_temporal import StrideDetection
 from empkins_macro.feature_extraction.tug._tug import TUG
 
@@ -36,7 +35,6 @@ feature_dict_all = {
 def extract_generic_features(
     data: pd.DataFrame,
     feature_dict: Dict[str, Union[Dict[str, Any], Sequence[Dict[str, Any]]]],
-        system: MOTION_CAPTURE_SYSTEM
 ) -> pd.DataFrame:
     import empkins_macro.feature_extraction.generic as generic
 
@@ -48,7 +46,7 @@ def extract_generic_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system="xsens"))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"generic": result_data}, names=["feature_type"])
@@ -56,7 +54,7 @@ def extract_generic_features(
     return result_data
 
 
-def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]], system: MOTION_CAPTURE_SYSTEM) -> pd.DataFrame:
+def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
     import empkins_macro.feature_extraction.body_posture_expert as expert
 
     feature_funcs = dict(getmembers(expert, isfunction))
@@ -68,7 +66,8 @@ def extract_expert_features(data: pd.DataFrame, feature_dict: Dict[str, Dict[str
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, **param_dict))
+
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])

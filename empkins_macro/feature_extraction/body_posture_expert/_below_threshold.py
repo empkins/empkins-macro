@@ -17,12 +17,12 @@ from empkins_macro.utils._types import str_t
 
 def below_threshold(
     data: pd.DataFrame,
-    system: MOTION_CAPTURE_SYSTEM,
     body_part: str_t,
     data_format: Optional[str] = "calc",
     channel: Optional[str] = "vel",
     axis: Optional[str] = "norm",
     threshold: Optional[float] = 0.1,
+    system: Optional[MOTION_CAPTURE_SYSTEM] = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "below_threshold"
