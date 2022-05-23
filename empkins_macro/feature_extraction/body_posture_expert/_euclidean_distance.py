@@ -1,12 +1,11 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import biopsykit as bp
 import numpy as np
 import pandas as pd
 
-from empkins_macro.feature_extraction.base_functions import (
-    euclidean_distance as distance,
-)
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
+from empkins_macro.feature_extraction.base_functions import euclidean_distance as distance
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,
     _INDEX_LEVELS_OUT,
@@ -17,6 +16,7 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
 
 def euclidean_distance(
     data: pd.DataFrame,
+    system: MOTION_CAPTURE_SYSTEM,
     body_part: Sequence[str],
     data_format: Optional[str] = "global_pose",
     channel: Optional[str] = "pos_global",
@@ -41,7 +41,6 @@ def euclidean_distance(
     else:
         out = out_generic
 
-    # out = pd.concat([out_generic])
     out = {("_".join(body_part), name, channel, axis): out}
     out = pd.concat(out, names=_INDEX_LEVELS)
     out = out.reorder_levels(_INDEX_LEVELS_OUT)
@@ -50,9 +49,7 @@ def euclidean_distance(
     return out
 
 
-def _euclidean_distance_threshold(
-    data: pd.DataFrame, distance_thres: float
-) -> pd.DataFrame:
+def _euclidean_distance_threshold(data: pd.DataFrame, distance_thres: float) -> pd.DataFrame:
     # get minimum distance over recording
     data_min = np.squeeze(np.min(data))
     # extract phases where distance is below the sum of the threshold and the overall minimal distance

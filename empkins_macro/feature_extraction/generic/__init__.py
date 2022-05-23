@@ -17,5 +17,5 @@ from empkins_macro.feature_extraction.generic._generic import (
     mean_norm,
     std,
     std_norm,
-    zero_crossings
+    zero_crossings,
 )

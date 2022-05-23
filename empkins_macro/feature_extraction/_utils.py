@@ -2,13 +2,10 @@ from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
+from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_all_body_parts, get_body_parts_by_group
 from typing_extensions import get_args
 
-from empkins_io.sensors.motion_capture.body_parts import (
-    BODY_PART_GROUP,
-    get_all_body_parts,
-    get_body_parts_by_group,
-)
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.utils._types import str_t
 
 
@@ -22,17 +19,13 @@ def _sanitize_multicolumn_input(
         body_parts = param_dict[channel]
         if isinstance(body_parts, str):
             body_parts = [body_parts]
-        body_part_dict = dict(
-            [_extract_body_part(body_part, system=system) for body_part in body_parts]
-        )
+        body_part_dict = dict([_extract_body_part(system=system, body_parts=body_part) for body_part in body_parts])
         for key, body_parts in body_part_dict.items():
             _assert_has_columns_any_level(data, [body_parts])
             param_dict_out[(key, channel)] = tuple(body_parts)
         param_dict[channel] = body_part_dict
 
-    param_dict_out = {
-        key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out
-    }
+    param_dict_out = {key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out}
 
     # param_list = [(item[0], item[1], item[0], slice(None)) for item in param_list]
     # print(param_list)
@@ -68,28 +61,28 @@ def _apply_func_per_group(
     data_format: str,
     func_name: Callable,
     param_dict: Dict[str, Any],
-    system: Optional[str] = "xsens",  # not nice but works for now
+    system: MOTION_CAPTURE_SYSTEM,
     **kwargs,
 ) -> Dict[Tuple, pd.Series]:
-
     col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict, system)
     data = data.loc[:, data_format]
 
     return_dict = {}
     for key, col_idxs in col_idx_groups.items():
         data_slice = data.loc[:, col_idxs]
-        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(
-            lambda df: func_name(df, **kwargs)
-        )
+        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
         return_dict[key] = res.mean(axis=1)
     return return_dict
 
 
 def _extract_body_part(
-    body_parts: Union[str, Sequence[str]], system: str
+    system: MOTION_CAPTURE_SYSTEM, body_parts: Union[str, Sequence[str]]
 ) -> Tuple[str, Sequence[str]]:
     if body_parts is None:
         return "TotalBody", get_all_body_parts(system=system)
+    if isinstance(body_parts, list) and len(body_parts) == 1:
+        # unwrap singleton list
+        body_parts = body_parts[0]
     if isinstance(body_parts, str):
         if body_parts in get_args(BODY_PART_GROUP):
             return body_parts, get_body_parts_by_group(system, body_parts)

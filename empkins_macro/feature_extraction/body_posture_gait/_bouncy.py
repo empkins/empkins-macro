@@ -1,20 +1,12 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pandas as pd
 
-from empkins_macro.feature_extraction._utils import (
-    _apply_func_per_group,
-    _sanitize_output,
-)
-from empkins_macro.feature_extraction.generic._generic import (
-    _INDEX_LEVELS,
-    _INDEX_LEVELS_OUT,
-)
+from empkins_macro.feature_extraction._utils import _apply_func_per_group, _sanitize_output
+from empkins_macro.feature_extraction.generic._generic import _INDEX_LEVELS, _INDEX_LEVELS_OUT
 
 
-def torso_bounce(
-    data: pd.DataFrame, data_format: str, param_dict: Dict[str, Any]
-) -> pd.DataFrame:
+def torso_bounce(data: pd.DataFrame, data_format: str, param_dict: Dict[str, Any]) -> pd.DataFrame:
     return_dict = _apply_func_per_group(data, data_format, _torso_bounce, param_dict)
     return _sanitize_output(return_dict, "abs_max", _INDEX_LEVELS, _INDEX_LEVELS_OUT)
 

@@ -1,9 +1,10 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import biopsykit as bp
 import numpy as np
 import pandas as pd
 
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.feature_extraction._utils import _extract_body_part
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,
@@ -16,22 +17,20 @@ from empkins_macro.utils._types import str_t
 
 def below_threshold(
     data: pd.DataFrame,
+    system: MOTION_CAPTURE_SYSTEM,
     body_part: str_t,
     data_format: Optional[str] = "calc",
     channel: Optional[str] = "vel",
     axis: Optional[str] = "norm",
     threshold: Optional[float] = 0.1,
-    system: Optional[str] = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "below_threshold"
     if kwargs.get("suffix", False):
         name += f"_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(body_part, system=system)
-    start_end_below = _below_threshold_per_body_part(
-        data, data_format, body_part, channel, threshold
-    )
+    body_part_name, body_part = _extract_body_part(system=system, body_parts=body_part)
+    start_end_below = _below_threshold_per_body_part(data, data_format, body_part, channel, threshold)
 
     out = compute_params_from_start_end_time_array(start_end_below, data)
     out = {(body_part_name, name, channel, axis): out}

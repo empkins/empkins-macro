@@ -3,8 +3,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from gaitmap.utils.rotations import find_unsigned_3d_angle
-from scipy.ndimage import find_objects
-from scipy.ndimage import label
+from scipy.ndimage import find_objects, label
 from scipy.signal import find_peaks
 from scipy.spatial.transform.rotation import Rotation
 
@@ -68,9 +67,7 @@ class TUG:
         left_stand_up_time = left_fa.index[zero_crossings(left_fa)][0] - self.start
         right_stand_up_time = right_fa.index[zero_crossings(right_fa)][0] - self.start
 
-        return pd.Series(
-            min(left_stand_up_time, right_stand_up_time), ["time_to_stand_up"]
-        )
+        return pd.Series(min(left_stand_up_time, right_stand_up_time), ["time_to_stand_up"])
 
     def _calc_first_step_length(self, thres: Optional[float] = 0.4) -> pd.Series:
         left_pos = self.data["mvnx_segment"]["LeftFoot"]["pos"]
@@ -110,9 +107,7 @@ def _get_floor_angle(data: pd.DataFrame) -> pd.Series:
         columns=list("xyz"),
         index=data.index,
     )
-    floor_angle = (
-        np.rad2deg(find_unsigned_3d_angle(forward.to_numpy(), np.array([0, 0, 1]))) - 90
-    )
+    floor_angle = np.rad2deg(find_unsigned_3d_angle(forward.to_numpy(), np.array([0, 0, 1]))) - 90
     return pd.Series(floor_angle, index=forward.index)
 
 
