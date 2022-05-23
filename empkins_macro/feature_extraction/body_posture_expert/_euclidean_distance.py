@@ -35,9 +35,11 @@ def euclidean_distance(
     out_generic = pd.Series(result_dict)
 
     start_end = _euclidean_distance_threshold(dist, distance_thres)
-
-    out = compute_params_from_start_end_time_array(start_end, data)
-    out = pd.concat([out_generic, out])
+    if len(start_end) > 0:
+        out = compute_params_from_start_end_time_array(start_end, data)
+        out = pd.concat([out_generic, out])
+    else:
+        out = out_generic
 
     # out = pd.concat([out_generic])
     out = {("_".join(body_part), name, channel, axis): out}

@@ -472,7 +472,7 @@ def _get_stride_events_new(data: pd.DataFrame, side: str) -> pd.DataFrame:
 
 
 def _calc_cadence(df: pd.DataFrame) -> pd.Series:
-    return pd.Series(df["gait_velocity"] / df["stride_length"], name="cadence")
+    return pd.Series(df["gait_velocity"] / df["stride_length"] * 60, name="cadence")
 
 
 def _clean_stride_events(
