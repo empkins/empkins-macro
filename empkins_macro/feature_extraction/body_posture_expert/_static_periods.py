@@ -3,8 +3,8 @@ from typing import Optional, Sequence
 import numpy as np
 import pandas as pd
 from biopsykit.signals.imu.static_moment_detection import find_static_moments
-
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
+
 from empkins_macro.feature_extraction._utils import _extract_body_part
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,

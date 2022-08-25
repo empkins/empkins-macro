@@ -3,8 +3,8 @@ from typing import Optional, Sequence
 import biopsykit as bp
 import numpy as np
 import pandas as pd
-
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
+
 from empkins_macro.feature_extraction.base_functions import euclidean_distance as distance
 from empkins_macro.feature_extraction.body_posture_expert._utils import (
     _INDEX_LEVELS,

@@ -3,9 +3,9 @@ from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
 from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_all_body_parts, get_body_parts_by_group
+from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from typing_extensions import get_args
 
-from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from empkins_macro.utils._types import str_t
 
 
