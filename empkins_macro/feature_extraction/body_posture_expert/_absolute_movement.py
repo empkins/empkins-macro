@@ -20,7 +20,7 @@ def absolute_movement(
     data = data.stack(["data_format", "body_part", "channel"])
     out = np.linalg.norm(data, axis=1)
     out = pd.DataFrame(out, index=data.index, columns=["norm"])
-    out = out.unstack("time")
+    out = out.unstack("t")
     out = out.diff(axis=1).abs().sum().mean()
     out = pd.Series([out])
     out.index = pd.MultiIndex.from_tuples([(body_part_name, name, channel, axis, name)], names=_INDEX_LEVELS)
