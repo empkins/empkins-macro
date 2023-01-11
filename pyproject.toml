@@ -11,10 +11,7 @@ tsfresh = "^0"
 numpy = ">=1.19,<1.24"
 biopsykit = {git="https://github.com/mad-lab-fau/BioPsyKit.git", branch="main", extras=["jupyter"]}
 empkins-io = {path = "../empkins-io", develop = true}
-gaitmap = {path = "../gaitmap", develop = true, optional = true}
 
-[tool.poetry.extras]
-gaitmap = ["gaitmap"]
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 poethepoet = "^0.10.0"
