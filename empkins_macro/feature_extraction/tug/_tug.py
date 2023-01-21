@@ -2,7 +2,11 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from gaitmap.utils.rotations import find_unsigned_3d_angle
+
+try:
+    from gaitmap.utils.rotations import find_unsigned_3d_angle
+except ImportError as e:
+    raise ImportError("gaitmap is not installed. Please install gaitmap manually!") from e
 from scipy.ndimage import find_objects, label
 from scipy.signal import find_peaks
 from scipy.spatial.transform.rotation import Rotation

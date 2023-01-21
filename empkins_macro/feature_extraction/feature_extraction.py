@@ -4,9 +4,6 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import pandas as pd
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 
-from empkins_macro.feature_extraction.spatio_temporal import StrideDetection
-from empkins_macro.feature_extraction.tug._tug import TUG
-
 param_dict_gait_all = {
     "stride_time": ["TemporalFeatures"],
     "stance_time": ["TemporalFeatures"],
@@ -80,12 +77,12 @@ def extract_expert_features(
 
 def extract_spatio_temporal_features(
     data: pd.DataFrame, feature_dict: Optional[Dict[str, Dict[str, Any]]] = None
-) -> (pd.DataFrame, StrideDetection):
+) -> (pd.DataFrame, "StrideDetection"):
     import empkins_macro.feature_extraction.generic as generic
     import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
 
-    stride_detection = spatio_temporal.StrideDetection(data)
-    stride_detection.calc_spatio_temporal_features()
+    sd = spatio_temporal.StrideDetection(data)
+    sd.calc_spatio_temporal_features()
 
     feature_funcs = dict(getmembers(generic, isfunction))
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
@@ -100,20 +97,17 @@ def extract_spatio_temporal_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=stride_detection.features, **param_dict))
+            result_list.append(feature_funcs[feature_name](data=sd.features, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"gait": result_data}, names=["feature_type"])
     result_data = result_data.sort_index()
 
-    return result_data, stride_detection
-
-
-def stride_detection(data: pd.DataFrame) -> StrideDetection:
-    return StrideDetection(data)
+    return result_data, sd
 
 
 def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:
+    from empkins_macro.feature_extraction.tug._tug import TUG  # pylint: disable=import-outside-toplevel
 
     tug = TUG(data)
     tug.extract_tug_features()

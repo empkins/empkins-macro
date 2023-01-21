@@ -6,8 +6,8 @@ import pandas as pd
 try:
     from gaitmap.parameters import SpatialParameterCalculation, TemporalParameterCalculation
     from gaitmap.utils.rotations import find_angle_between_orientations, find_unsigned_3d_angle
-except ImportError:
-    raise ImportError("gaitmap is not installed. Please install gaitmap manually!")
+except ImportError as e:
+    raise ImportError("gaitmap is not installed. Please install gaitmap manually!") from e
 
 from scipy.signal import find_peaks
 from scipy.spatial.transform import Rotation
