@@ -69,6 +69,7 @@ def extract_expert_features(
         for param_dict in param_list:
             result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
 
+
     result_data = pd.concat(result_list)
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])
     result_data = result_data.sort_index()
@@ -149,3 +150,15 @@ def relative_to_baseline(df: pd.DataFrame, levels: List[str], test: Optional[str
         df.stack(levels).reorder_levels(index_order).sort_index(level="subject"),
         columns=columns,
     )
+
+
+def condition_difference(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.unstack("condition")
+    index_order = df.index.names
+
+    df = df.diff(axis=1)
+    df = df.droplevel(-1, axis=1)
+
+    df.dropna(inplace=True, how="all", axis=1)
+
+    return df.reorder_levels(index_order)
