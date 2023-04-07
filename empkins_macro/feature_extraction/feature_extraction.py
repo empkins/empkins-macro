@@ -69,7 +69,6 @@ def extract_expert_features(
         for param_dict in param_list:
             result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
 
-
     result_data = pd.concat(result_list)
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])
     result_data = result_data.sort_index()

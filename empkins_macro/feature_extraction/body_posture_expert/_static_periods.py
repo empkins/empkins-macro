@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -30,7 +30,7 @@ def static_periods(
     if kwargs.get("suffix", False):
         name += f"_{window_sec}_{overlap_percent}_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(system,body_part)
+    body_part_name, body_part = _extract_body_part(system, body_part)
 
     static_periods_start_end = _static_periods_per_body_part(
         data,
@@ -77,8 +77,7 @@ def _static_periods_per_body_part(
 
     if len(body_part) > 1:
         sp_list = [
-            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode(["start", "end"])
-            for sp in sp_list
+            sp.apply(lambda df: np.arange(df["start"], df["end"]), axis=1).explode(["start", "end"]) for sp in sp_list
         ]
         intersec_arr = sp_list[0]
 
