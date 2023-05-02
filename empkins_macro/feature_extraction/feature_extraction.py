@@ -45,7 +45,7 @@ def extract_generic_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, system=system, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"generic": result_data}, names=["feature_type"])
@@ -67,7 +67,7 @@ def extract_expert_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, system=system, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])
