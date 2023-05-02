@@ -14,7 +14,7 @@ def absolute_movement(
     channel = "pos"
     axis = "norm"
     name = "absolute_movement"
-    body_part_name, body_part = _extract_body_part(kwargs.get("body_part", None), system=system)
+    body_part_name, body_part = _extract_body_part(system=system, body_parts=kwargs.get("body_part", None))
 
     data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
     data = data.stack(["data_format", "body_part", "channel"])

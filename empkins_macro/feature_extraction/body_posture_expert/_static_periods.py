@@ -30,7 +30,7 @@ def static_periods(
     if kwargs.get("suffix", False):
         name += f"_{window_sec}_{overlap_percent}_{threshold}"
 
-    body_part_name, body_part = _extract_body_part(system, body_part)
+    body_part_name, body_part = _extract_body_part(system=system, body_parts=body_part)
 
     static_periods_start_end = _static_periods_per_body_part(
         data,
