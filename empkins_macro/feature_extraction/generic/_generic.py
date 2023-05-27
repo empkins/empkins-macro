@@ -140,12 +140,40 @@ def fft_aggregated(data: pd.DataFrame, data_format: str, param_dict: Dict[str, A
     return pd.concat(list_return)
 
 
+def fft_aggregated_nan_safe(data: pd.DataFrame, data_format: str, param_dict: Dict[str, Any], **kwargs) -> pd.DataFrame:
+    from empkins_macro.feature_extraction.base_functions import fft_aggregated_nan_safe
+
+    list_return = []
+    for param in ["centroid", "variance", "skew", "kurtosis"]:
+        return_dict = _apply_func_per_group(
+            data, data_format, fft_aggregated_nan_safe, param_dict, param=param, **kwargs
+        )
+        list_return.append(_sanitize_output(return_dict, f"fft_aggregated_{param}", _INDEX_LEVELS, _INDEX_LEVELS_OUT))
+
+    return pd.concat(list_return)
+
+
 def fft_aggregated_norm(data: pd.DataFrame, data_format: str, param_dict: Dict[str, Any], **kwargs) -> pd.DataFrame:
     from empkins_macro.feature_extraction.base_functions import fft_aggregated_norm
 
     list_return = []
     for param in ["centroid", "variance", "skew", "kurtosis"]:
         return_dict = _apply_func_per_group(data, data_format, fft_aggregated_norm, param_dict, param=param, **kwargs)
+        list_return.append(_sanitize_output(return_dict, f"fft_aggregated_{param}", _INDEX_LEVELS, _INDEX_LEVELS_OUT))
+
+    return pd.concat(list_return)
+
+
+def fft_aggregated_norm_nan_safe(
+    data: pd.DataFrame, data_format: str, param_dict: Dict[str, Any], **kwargs
+) -> pd.DataFrame:
+    from empkins_macro.feature_extraction.base_functions import fft_aggregated_norm_nan_safe
+
+    list_return = []
+    for param in ["centroid", "variance", "skew", "kurtosis"]:
+        return_dict = _apply_func_per_group(
+            data, data_format, fft_aggregated_norm_nan_safe, param_dict, param=param, **kwargs
+        )
         list_return.append(_sanitize_output(return_dict, f"fft_aggregated_{param}", _INDEX_LEVELS, _INDEX_LEVELS_OUT))
 
     return pd.concat(list_return)
