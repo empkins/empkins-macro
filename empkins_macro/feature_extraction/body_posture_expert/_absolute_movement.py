@@ -2,15 +2,15 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 
 from empkins_macro.feature_extraction._utils import _extract_body_part
 from empkins_macro.feature_extraction.body_posture_expert._utils import _INDEX_LEVELS, _INDEX_LEVELS_OUT
 
 
 def absolute_movement(
-    data: pd.DataFrame, system: MOTION_CAPTURE_SYSTEM, data_format: Optional[str] = "global_pose", **kwargs
+    data: pd.DataFrame, data_format: Optional[str] = "global_pose", system: Optional[str] = "xsens", **kwargs
 ) -> pd.DataFrame:
+
     channel = "pos_global"
     axis = "norm"
     name = "absolute_movement"

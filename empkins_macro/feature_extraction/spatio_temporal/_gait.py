@@ -6,8 +6,8 @@ import pandas as pd
 try:
     from gaitmap.parameters import SpatialParameterCalculation, TemporalParameterCalculation
     from gaitmap.utils.rotations import find_angle_between_orientations, find_unsigned_3d_angle
-except ImportError:
-    raise ImportError("gaitmap is not installed. Please install gaitmap manually!")
+except ImportError as e:
+    raise ImportError("gaitmap is not installed. Please install gaitmap manually!") from e
 
 from scipy.signal import find_peaks
 from scipy.spatial.transform import Rotation
@@ -400,7 +400,7 @@ def _get_stride_events_new(data: pd.DataFrame, side: str) -> pd.DataFrame:
 
 
 def _calc_cadence(df: pd.DataFrame) -> pd.Series:
-    return pd.Series(df["gait_velocity"] / df["stride_length"], name="cadence")
+    return pd.Series(df["gait_velocity"] / df["stride_length"] * 60, name="cadence")
 
 
 def _clean_stride_events(segment_data: pd.DataFrame, stride_events: pd.DataFrame, thres: float = 50) -> pd.DataFrame:

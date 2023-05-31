@@ -4,9 +4,6 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import pandas as pd
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 
-from empkins_macro.feature_extraction.spatio_temporal import StrideDetection
-from empkins_macro.feature_extraction.tug._tug import TUG
-
 param_dict_gait_all = {
     "stride_time": ["TemporalFeatures"],
     "stance_time": ["TemporalFeatures"],
@@ -48,7 +45,7 @@ def extract_generic_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, system=system, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"generic": result_data}, names=["feature_type"])
@@ -70,7 +67,7 @@ def extract_expert_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=data, **param_dict, system=system))
+            result_list.append(feature_funcs[feature_name](data=data, system=system, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"expert": result_data}, names=["feature_type"])
@@ -80,12 +77,12 @@ def extract_expert_features(
 
 def extract_spatio_temporal_features(
     data: pd.DataFrame, feature_dict: Optional[Dict[str, Dict[str, Any]]] = None
-) -> (pd.DataFrame, StrideDetection):
+) -> (pd.DataFrame, "StrideDetection"):
     import empkins_macro.feature_extraction.generic as generic
     import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
 
-    stride_detection = spatio_temporal.StrideDetection(data)
-    stride_detection.calc_spatio_temporal_features()
+    sd = spatio_temporal.StrideDetection(data)
+    sd.calc_spatio_temporal_features()
 
     feature_funcs = dict(getmembers(generic, isfunction))
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
@@ -100,20 +97,17 @@ def extract_spatio_temporal_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=stride_detection.features, **param_dict))
+            result_list.append(feature_funcs[feature_name](data=sd.features, **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"gait": result_data}, names=["feature_type"])
     result_data = result_data.sort_index()
 
-    return result_data, stride_detection
-
-
-def stride_detection(data: pd.DataFrame) -> StrideDetection:
-    return StrideDetection(data)
+    return result_data, sd
 
 
 def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:
+    from empkins_macro.feature_extraction.tug._tug import TUG  # pylint: disable=import-outside-toplevel
 
     tug = TUG(data)
     tug.extract_tug_features()
@@ -155,3 +149,15 @@ def relative_to_baseline(df: pd.DataFrame, levels: List[str], test: Optional[str
         df.stack(levels).reorder_levels(index_order).sort_index(level="subject"),
         columns=columns,
     )
+
+
+def condition_difference(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.unstack("condition")
+    index_order = df.index.names
+
+    df = df.diff(axis=1)
+    df = df.droplevel(-1, axis=1)
+
+    df.dropna(inplace=True, how="all", axis=1)
+
+    return df.reorder_levels(index_order)
