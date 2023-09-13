@@ -1,3 +1,4 @@
+import sys
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import pandas as pd
@@ -70,7 +71,12 @@ def _apply_func_per_group(
     return_dict = {}
     for key, col_idxs in col_idx_groups.items():
         data_slice = data.loc[:, col_idxs]
-        res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+        try:
+            res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+        except ValueError as e:
+            # If the slice is empty, we get a ValueError. In this case, we skip the slice.
+            print(f"ValueError for col_idxs {col_idxs}, skipping this slice:", e, file=sys.stderr)
+            continue
         return_dict[key] = res.mean(axis=1)
     return return_dict
 

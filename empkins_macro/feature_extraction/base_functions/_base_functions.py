@@ -55,45 +55,45 @@ def abs_max_norm(data: pd.DataFrame) -> pd.Series:
 
 
 def std(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.std(data, axis=0))
+    out = pd.Series(np.nanstd(data, axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def std_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.std(norm)
+    out = np.nanstd(norm)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def mean(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.mean(data, axis=0))
+    out = pd.Series(np.nanmean(data, axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def mean_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.mean(norm, axis=0)
+    out = np.nanmean(norm, axis=0)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def mean_abs(data: pd.DataFrame) -> pd.Series:
-    out = pd.Series(np.mean(np.abs(data), axis=0))
+    out = pd.Series(np.nanmean(np.abs(data), axis=0))
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def cov(data: pd.DataFrame) -> pd.Series:
-    out = np.std(data, axis=0) / np.mean(data, axis=0)
+    out = np.std(data, axis=0) / np.nanmean(data, axis=0)
     out.index = out.index.get_level_values("axis")
     return out
 
 
 def cov_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    if np.mean(norm) != 0:
-        out = np.std(norm, axis=0) / np.mean(norm, axis=0)
+    if np.nanmean(norm) != 0:
+        out = np.std(norm, axis=0) / np.nanmean(norm, axis=0)
     else:
         out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
@@ -101,7 +101,7 @@ def cov_norm(data: pd.DataFrame) -> pd.Series:
 
 def entropy(data: pd.DataFrame) -> pd.Series:
     out = minmax_scale(data)
-    if np.sum(out) != 0:
+    if np.nansum(out) != 0:
         out = stats.entropy(out)
     else:
         out = np.nan
@@ -109,9 +109,11 @@ def entropy(data: pd.DataFrame) -> pd.Series:
 
 
 def entropy_norm(data: pd.DataFrame) -> pd.Series:
-    norm = np.linalg.norm(data, axis=1)
+    norm = np.linalg.norm(
+        data.dropna(), axis=1
+    )  # TODO: is it okay to just drop nans when calculating entropy? I think it is.
     norm = minmax_scale(norm)
-    if np.sum(norm) != 0:
+    if np.nansum(norm) != 0:
         out = stats.entropy(norm)
     else:
         out = np.nan
@@ -125,23 +127,24 @@ def zero_crossings(data: pd.DataFrame) -> pd.Series:
 
 def mean_crossings_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = number_crossing_m(norm, np.mean(norm, axis=0).squeeze())
+    out = number_crossing_m(norm, np.nanmean(norm, axis=0).squeeze())
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
 def abs_energy(data: pd.DataFrame) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import abs_energy
 
-    out = np.apply_along_axis(abs_energy, axis=0, arr=data)
+    out = np.apply_along_axis(abs_energy, axis=0, arr=data.dropna())
     return pd.Series(out, index=data.columns.get_level_values(level=-1))
 
 
 def abs_energy_norm(data: pd.DataFrame) -> pd.Series:
     from tsfresh.feature_extraction.feature_calculators import abs_energy
 
-    norm = np.linalg.norm(data, axis=1)
+    norm = np.linalg.norm(data.dropna(), axis=1)
     out = abs_energy(norm)
-    return pd.Series([out], index=pd.Index(["norm"]))
+    series = pd.Series([out], index=pd.Index(["norm"]))
+    return series
 
 
 def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
@@ -153,13 +156,24 @@ def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) ->
         param = [param]
     param = [{"aggtype": pn} for pn in param]
 
-    if np.sum(data) != 0:
+    if np.nansum(data) != 0:
         out = np.apply_along_axis(fft_aggregated, axis=0, arr=data, param=param)
         out = [[x[1] for x in o][0] for o in out]
     else:
         out = np.nan
     out = pd.Series(out, index=data.columns.get_level_values(level=-1))
     return out
+
+
+def fft_aggregated_nan_safe(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
+    # pick the longest section without nans to approximate fft
+    arr = data.iloc[:, 0].values  # Extract out first column from dataframe as array
+    m = np.concatenate(([True], np.isnan(arr), [True]))  # Mask
+    ss = np.flatnonzero(m[1:] != m[:-1]).reshape(-1, 2)  # Start-stop limits
+    start, stop = ss[(ss[:, 1] - ss[:, 0]).argmax()]  # Get max interval, interval limits
+
+    section = data.iloc[start:stop]
+    return fft_aggregated(section, param)
 
 
 def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
@@ -172,8 +186,19 @@ def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = Non
     param = [{"aggtype": param_name} for param_name in param]
 
     norm = np.linalg.norm(data, axis=1)
-    if np.sum(norm) != 0:
+    if np.nansum(norm) != 0:
         out = list(fft_aggregated(norm, param=param))[0][1]
     else:
         out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
+
+
+def fft_aggregated_norm_nan_safe(data: pd.DataFrame, param: Optional[Sequence[str]] = None) -> pd.Series:
+    # pick the longest section without nans to approximate fft
+    arr = np.linalg.norm(data, axis=1)  # Extract out first column from dataframe as array
+    m = np.concatenate(([True], np.isnan(arr), [True]))  # Mask
+    ss = np.flatnonzero(m[1:] != m[:-1]).reshape(-1, 2)  # Start-stop limits
+    start, stop = ss[(ss[:, 1] - ss[:, 0]).argmax()]  # Get max interval, interval limits
+
+    section = data.iloc[start:stop]
+    return fft_aggregated_norm(section, param)
