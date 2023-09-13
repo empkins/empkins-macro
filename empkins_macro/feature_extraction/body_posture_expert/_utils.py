@@ -15,8 +15,8 @@ def start_end_array_indices_to_time(data: pd.DataFrame, start_end: np.ndarray) -
 
     return pd.DataFrame(
         {
-            "start": data.iloc[start_end[:, 0]].index.get_level_values("t"),
-            "end": data.iloc[start_end[:, 1]].index.get_level_values("t"),
+            "start": data.iloc[start_end[:, 0]].index.get_level_values("time"),
+            "end": data.iloc[start_end[:, 1]].index.get_level_values("time"),
         }
     )
 
@@ -32,6 +32,7 @@ def compute_params_from_start_end_time_array(
         "max_duration_sec": start_end_duration.max(),
         "mean_duration_sec": start_end_duration.mean(),
         "std_duration_sec": start_end_duration.std(),
+        "longer_than_3sec": start_end_duration[start_end_duration > 3].count(),
     }
 
     return pd.Series(dict_out)
