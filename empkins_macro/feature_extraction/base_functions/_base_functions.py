@@ -32,7 +32,7 @@ def euclidean_distance(
 
 def max_val(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.max(data, axis=0))
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
@@ -44,7 +44,7 @@ def max_val_norm(data: pd.DataFrame) -> pd.Series:
 
 def abs_max(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.max(np.abs(data), axis=0))
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
@@ -56,7 +56,7 @@ def abs_max_norm(data: pd.DataFrame) -> pd.Series:
 
 def std(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.nanstd(data, axis=0))
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
@@ -68,7 +68,7 @@ def std_norm(data: pd.DataFrame) -> pd.Series:
 
 def mean(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.nanmean(data, axis=0))
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
@@ -80,13 +80,13 @@ def mean_norm(data: pd.DataFrame) -> pd.Series:
 
 def mean_abs(data: pd.DataFrame) -> pd.Series:
     out = pd.Series(np.nanmean(np.abs(data), axis=0))
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
 def cov(data: pd.DataFrame) -> pd.Series:
     out = np.std(data, axis=0) / np.nanmean(data, axis=0)
-    out.index = out.index.get_level_values("axis")
+    out.index = data.columns.get_level_values("axis")
     return out
 
 
