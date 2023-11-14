@@ -11,17 +11,21 @@ def absolute_movement(
     data: pd.DataFrame, data_format: Optional[str] = "global_pose", system: Optional[str] = "xsens", **kwargs
 ) -> pd.DataFrame:
 
+    print(data.columns.get_level_values("data_format").unique())
+    print(data.columns.get_level_values("channel").unique())
+
     channel = "pos_global"
     axis = "norm"
     name = "absolute_movement"
     body_part_name, body_part = _extract_body_part(system=system, body_parts=kwargs.get("body_part", None))
 
-    data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
+    data = data.loc[:, pd.IndexSlice["mvnx_segment", body_part, "pos", :]]
     data = data.stack(["data_format", "body_part", "channel"])
     out = np.linalg.norm(data, axis=1)
     out = pd.DataFrame(out, index=data.index, columns=["norm"])
     out = out.unstack("t")
-    out = out.diff(axis=1).abs().sum().mean()
+    out = out.diff(axis=1).abs()
+    out = out.sum(axis=0).mean(axis=0)
     out = pd.Series([out])
     out.index = pd.MultiIndex.from_tuples([(body_part_name, name, channel, axis, name)], names=_INDEX_LEVELS)
     out = out.reorder_levels(_INDEX_LEVELS_OUT)

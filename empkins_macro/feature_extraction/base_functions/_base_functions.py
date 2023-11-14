@@ -62,7 +62,7 @@ def std(data: pd.DataFrame) -> pd.Series:
 
 def std_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    out = np.nanstd(norm)
+    out = np.nanstd(norm, axis=0)
     return pd.Series([out], index=pd.Index(["norm"]))
 
 
@@ -92,7 +92,7 @@ def cov(data: pd.DataFrame) -> pd.Series:
 
 def cov_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(data, axis=1)
-    if np.nanmean(norm) != 0:
+    if np.nanmean(norm, axis=0) != 0:
         out = np.std(norm, axis=0) / np.nanmean(norm, axis=0)
     else:
         out = np.nan
@@ -100,9 +100,9 @@ def cov_norm(data: pd.DataFrame) -> pd.Series:
 
 
 def entropy(data: pd.DataFrame) -> pd.Series:
-    out = minmax_scale(data)
+    out = minmax_scale(data, axis=0)
     if np.nansum(out) != 0:
-        out = stats.entropy(out)
+        out = stats.entropy(out, axis=0)
     else:
         out = np.nan
     return pd.Series(out, index=data.columns.get_level_values(level=-1))
@@ -112,9 +112,9 @@ def entropy_norm(data: pd.DataFrame) -> pd.Series:
     norm = np.linalg.norm(
         data.dropna(), axis=1
     )  # TODO: is it okay to just drop nans when calculating entropy? I think it is.
-    norm = minmax_scale(norm)
-    if np.nansum(norm) != 0:
-        out = stats.entropy(norm)
+    norm = minmax_scale(norm, axis=0)
+    if np.nansum(norm, axis=0) != 0:
+        out = stats.entropy(norm, axis=0)
     else:
         out = np.nan
     return pd.Series([out], index=pd.Index(["norm"]))
@@ -156,7 +156,7 @@ def fft_aggregated(data: pd.DataFrame, param: Optional[Sequence[str]] = None) ->
         param = [param]
     param = [{"aggtype": pn} for pn in param]
 
-    if np.nansum(data) != 0:
+    if np.nansum(data, axis=0) != 0:
         out = np.apply_along_axis(fft_aggregated, axis=0, arr=data, param=param)
         out = [[x[1] for x in o][0] for o in out]
     else:
@@ -186,7 +186,7 @@ def fft_aggregated_norm(data: pd.DataFrame, param: Optional[Sequence[str]] = Non
     param = [{"aggtype": param_name} for param_name in param]
 
     norm = np.linalg.norm(data, axis=1)
-    if np.nansum(norm) != 0:
+    if np.nansum(norm, axis=0) != 0:
         out = list(fft_aggregated(norm, param=param))[0][1]
     else:
         out = np.nan
