@@ -14,6 +14,7 @@ def _sanitize_multicolumn_input(
     data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t], system: str
 ) -> Dict[Tuple, Tuple]:
     _assert_has_columns_any_level(data, [[data_format]])
+    _assert_has_columns_any_level(data, [[k for k in param_dict.keys()]])
 
     param_dict_out = {}
     for channel in param_dict:
@@ -28,12 +29,6 @@ def _sanitize_multicolumn_input(
 
     param_dict_out = {key: (param_dict_out[key], key[1], slice(None)) for key in param_dict_out}
 
-    # param_list = [(item[0], item[1], item[0], slice(None)) for item in param_list]
-    # print(param_list)
-
-    # param_list = [[body_part_dict, [channel]] for channel, body_part_dict in param_dict.items()]
-    # param_list = [list(product(*v)) for v in param_list]
-    # param_list = tuple((*l, slice(None)) for v in param_list for l in v)
     return param_dict_out
 
 
@@ -50,7 +45,7 @@ def _sanitize_output(
     data = pd.concat(data_dict)
     data = pd.concat({type_name: data})
     data = pd.concat({metric_name: data})
-    data.index.set_names(index_names, inplace=True)
+    data = data.index.set_names(index_names)
     if new_index_order:
         data = data.reorder_levels(new_index_order)
 
