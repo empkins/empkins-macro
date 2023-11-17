@@ -7,6 +7,7 @@ from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_al
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
 from typing_extensions import get_args
 
+from empkins_macro.utils.exceptions import FeatureExtractionError
 from empkins_macro.utils._types import str_t
 
 
@@ -68,9 +69,16 @@ def _apply_func_per_group(
         data_slice = data.loc[:, col_idxs]
         try:
             res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+            if data_slice.empty:
+                raise ValueError("")
         except ValueError as e:
             # If the slice is empty, we get a ValueError. In this case, we skip the slice.
-            print(f"ValueError for col_idxs {col_idxs}, skipping this slice:", e, file=sys.stderr)
+            print(
+                f"Feature extraction error when computing {func_name.__name__} for col_idxs {col_idxs}, "
+                f"skipping this slice: ",
+                e,
+                file=sys.stderr,
+            )
             continue
         return_dict[key] = res.mean(axis=1)
     return return_dict
