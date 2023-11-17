@@ -28,7 +28,7 @@ def compute_params_from_start_end_time_array(
     start_end_duration = start_end.diff(axis=1)["end"]
     dict_out = {
         "count_per_min": (60 * len(start_end_duration)) / data_len,
-        "ratio_percent": np.sum(start_end_duration) / data_len,
+        "ratio_percent": 100 * (np.sum(start_end_duration) / data_len),
         "max_duration_sec": start_end_duration.max(),
         "mean_duration_sec": start_end_duration.mean(),
         "std_duration_sec": start_end_duration.std(),
