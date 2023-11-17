@@ -32,7 +32,7 @@ def compute_params_from_start_end_time_array(
         "max_duration_sec": start_end_duration.max(),
         "mean_duration_sec": start_end_duration.mean(),
         "std_duration_sec": start_end_duration.std(),
-        "longer_than_3sec": start_end_duration[start_end_duration > 3].count(),
+        # "longer_than_3sec": start_end_duration[start_end_duration > 3].count(),
     }
 
     return pd.Series(dict_out)
