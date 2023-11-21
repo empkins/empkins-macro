@@ -46,7 +46,7 @@ def _sanitize_output(
     data = pd.concat(data_dict)
     data = pd.concat({type_name: data})
     data = pd.concat({metric_name: data})
-    data = data.index.set_names(index_names)
+    data.index = data.index.set_names(index_names)
     if new_index_order:
         data = data.reorder_levels(new_index_order)
 
