@@ -24,8 +24,10 @@ def start_end_array_indices_to_time(data: pd.DataFrame, start_end: np.ndarray) -
 def compute_params_from_start_end_time_array(
     start_end: pd.DataFrame, data: pd.DataFrame, sampling_rate: float = 60
 ) -> pd.Series:
+
     data_len = len(data) / sampling_rate
     start_end_duration = start_end.diff(axis=1)["end"]
+
     dict_out = {
         "count_per_min": (60 * len(start_end_duration)) / data_len,
         "ratio_percent": 100 * (np.sum(start_end_duration) / data_len),
