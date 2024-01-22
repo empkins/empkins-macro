@@ -28,7 +28,8 @@ def static_periods(
 ) -> pd.DataFrame:
     name = "static_periods"
     if kwargs.get("suffix", False):
-        name += f"_{window_sec}_{overlap_percent}_{threshold}"
+        for val in [window_sec, overlap_percent, threshold]:
+            name += f"_{np.format_float_positional(val)}"
 
     body_part_name, body_part = _extract_body_part(system=system, body_parts=body_part)
 
