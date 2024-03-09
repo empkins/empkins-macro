@@ -115,6 +115,29 @@ def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:
     return tug.features
 
 
+def extract_temporal_features(
+    data: pd.DataFrame,
+    feature_list: Sequence[str],
+    index_name: Optional[str] = "window_count",
+) -> pd.DataFrame:
+    import empkins_macro.feature_extraction.temporal_change as temporal
+
+    data_wide = data.unstack(index_name)
+    feature_funcs = dict(getmembers(temporal, isfunction))
+    feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
+    result_list = []
+    for feature_name in feature_list:
+        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        data_out = feature_funcs[feature_name](data=data_wide)
+        result_list.append(data_out)
+
+    result_data = pd.concat(result_list)
+    result_data = result_data.sort_index()
+    result_data.columns.name = "temporal_change"
+    result_data = result_data.stack("temporal_change").to_frame("data")
+    return result_data
+
+
 def clean_features(data: pd.DataFrame) -> pd.DataFrame:
     """Clean extracted features and drop features that did not produce any output (i.e., NaN output).
 

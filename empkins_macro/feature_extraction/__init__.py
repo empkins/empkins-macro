@@ -5,6 +5,7 @@ from empkins_macro.feature_extraction.feature_extraction import (
     extract_generic_features,
     extract_spatio_temporal_features,
     extract_tug_features,
+    extract_temporal_features,
     relative_to_baseline,
 )
 
@@ -16,4 +17,5 @@ __all__ = [
     "clean_features",
     "extract_spatio_temporal_features",
     "extract_tug_features",
+    "extract_temporal_features",
 ]
