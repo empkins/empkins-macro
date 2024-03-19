@@ -516,7 +516,7 @@ def _get_gait_sequence(min_vel_events: pd.DataFrame) -> pd.DataFrame:
     sequ.rename({"end_shifted": "end"}, inplace=True, axis=1)
 
     # add first start and last end
-    sequ = sequ.append(pd.DataFrame([[np.nan, np.nan]], columns=["start", "end"]))
+    sequ = pd.concat([sequ, pd.DataFrame([[np.nan, np.nan]], columns=["start", "end"])])
     sequ["start"] = sequ["start"].shift(1, fill_value=min_vel_events.iloc[0]["start"])
     sequ.iloc[-1]["end"] = min_vel_events.iloc[-1]["end"]
 

@@ -12,7 +12,7 @@ from empkins_macro.utils._types import str_t
 
 
 def _sanitize_multicolumn_input(
-    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t], system: str
+    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t], system: MOTION_CAPTURE_SYSTEM
 ) -> Dict[Tuple, Tuple]:
     _assert_has_columns_any_level(data, [[data_format]])
     _assert_has_columns_any_level(data, [[k for k in param_dict.keys()]])

@@ -97,7 +97,7 @@ def extract_spatio_temporal_features(
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
-            result_list.append(feature_funcs[feature_name](data=sd.features, **param_dict))
+            result_list.append(feature_funcs[feature_name](data=sd.features, system="xsens", **param_dict))
 
     result_data = pd.concat(result_list)
     result_data = pd.concat({"gait": result_data}, names=["feature_type"])
