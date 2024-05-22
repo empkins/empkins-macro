@@ -5,13 +5,13 @@ description = "A Python package to work with EmpkinS Macro data."
 authors = ["Robert Richer <robert.richer@fau.de>", "Luca Abel <luca.abel@fau.de>"]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<4.0"
 tsfresh = "^0"
 # numpy smaller 1.24 because of tsfresh
 numpy = ">=1.19,<1.24"
 biopsykit = {git="https://github.com/mad-lab-fau/BioPsyKit.git", branch="main", extras=["jupyter"]}
-empkins-io = {git="https://github.com/empkins/empkins-io.git", branch="main", extras=["jupyter"]}
-#empkins-io = {path = "../empkins-io", develop = true}
+#empkins-io = {git="https://github.com/empkins/empkins-io.git", branch="main", extras=["jupyter"]}
+empkins-io = {path = "../empkins-io", develop = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
