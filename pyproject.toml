@@ -11,10 +11,10 @@ tsfresh = "^0"
 numpy = ">=1.19,<1.24"
 empkins-io = {path = "../empkins-io", develop = true}
 
-gaitmap = {path="../gaitmap", optional = true}
+#gaitmap = {path="../gaitmap", optional = true}
 
 [tool.poetry.extras]
-gait = ["gaitmap"]
+#gait = ["gaitmap"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
