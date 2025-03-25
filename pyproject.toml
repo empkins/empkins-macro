@@ -1,28 +1,32 @@
-[tool.poetry]
+[project]
 name = "empkins-macro"
 version = "0.1.0"
 description = "A Python package to work with EmpkinS Macro data."
-authors = ["Robert Richer <robert.richer@fau.de>", "Luca Abel <luca.abel@fau.de>"]
+authors = [
+    { name = "Robert Richer", email = "robert.richer@fau.de" },
+    { name = "Luca Abel", email = "luca.abel@fau.de" },
+]
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "tsfresh>=0,<1",
+    "numpy>=1.19",
+    "empkins-io",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<3.11"
-tsfresh = "^0"
-# numpy smaller 1.24 because of tsfresh
-numpy = ">=1.19,<1.24"
-empkins-io = {path = "../empkins-io", develop = true}
+[dependency-groups]
+dev = [
+    "pytest~=5.2",
+    "poethepoet>=0.10.0,<0.11",
+]
 
-#gaitmap = {path="../gaitmap", optional = true}
+[tool.uv]
 
-[tool.poetry.extras]
-#gait = ["gaitmap"]
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-poethepoet = "^0.10.0"
+[tool.uv.sources]
+empkins-io = { path = "../empkins-io", editable = true }
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 120
@@ -50,7 +54,6 @@ profile = "black"
 multi_line_output = 3
 line_length = 120
 skip_gitignore = true
-
 
 [tool.poe.tasks]
 _black = "black ."
