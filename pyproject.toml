@@ -21,7 +21,8 @@ dev = [
 
 [tool.uv.sources]
 biopsykit = { git = "https://github.com/mad-lab-fau/BioPsyKit.git", branch = "main" }
-empkins-io = { git = "https://github.com/empkins/empkins-io.git", branch = "main" }
+#empkins-io = { git = "https://github.com/empkins/empkins-io.git", branch = "main" }
+empkins-io = { path = "../empkins-io", editable = true }
 
 [build-system]
 requires = ["hatchling"]
