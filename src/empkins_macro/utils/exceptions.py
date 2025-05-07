@@ -5,5 +5,3 @@ __all__ = ["FeatureExtractionError"]
 
 class FeatureExtractionError(Exception):
     """Raised when a feature extraction error occurs."""
-
-    pass

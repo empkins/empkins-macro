@@ -1,9 +1,9 @@
-from typing import Tuple, Sequence, Optional
+from collections.abc import Sequence
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-"""Module containing various functions that calculate metrics from feature data for a set of VPs. 
+"""Module containing various functions that calculate metrics from feature data for a set of VPs.
 The functions are returning a dataframe with the calculated value for each VP."""
 
 _INDEX_LEVELS: Sequence[str] = ["temporal_change", "metric", "type", "body_part", "channel", "axis"]
@@ -52,7 +52,7 @@ def linefit_1d_half(data: pd.DataFrame) -> pd.DataFrame:
     return _slope_helper(data, degree=1, half=True)
 
 
-def _slope_helper(data: pd.DataFrame, degree: Optional[int] = 1, half: Optional[bool] = False) -> pd.DataFrame:
+def _slope_helper(data: pd.DataFrame, degree: int | None = 1, half: bool | None = False) -> pd.DataFrame:
     """Calculate the slope for all points in a dataframe (with the option to only use the first half of the values)."""
     n_windows = len(data.columns)
     if half:
@@ -62,10 +62,7 @@ def _slope_helper(data: pd.DataFrame, degree: Optional[int] = 1, half: Optional[
     out = np.polynomial.polynomial.polyfit(x=np.arange(len(data.columns)), y=data.T, deg=degree)
     out = pd.DataFrame(out.T, index=data.index)
     out.columns = [f"a{col}" for col in reversed(out.columns)]
-    if degree == 1:
-        out = out.add_prefix("linefit_")
-    else:
-        out = out.add_prefix(f"polyfit_{degree}d_")
+    out = out.add_prefix("linefit_") if degree == 1 else out.add_prefix(f"polyfit_{degree}d_")
 
     if half:
         out = out.add_suffix("_half")

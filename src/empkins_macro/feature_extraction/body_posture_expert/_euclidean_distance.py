@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import biopsykit as bp
 import numpy as np
@@ -16,11 +16,11 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
 def euclidean_distance(
     data: pd.DataFrame,
     body_part: Sequence[str],
-    data_format: Optional[str] = "global_pose",
-    channel: Optional[str] = "pos_global",
-    axis: Optional[str] = "norm",
-    min_distance_cutoff: Optional[float] = 120,
-    distance_thres: Optional[float] = 20,
+    data_format: str | None = "global_pose",
+    channel: str | None = "pos_global",
+    axis: str | None = "norm",
+    min_distance_cutoff: float | None = 120,
+    distance_thres: float | None = 20,
     **kwargs,
 ) -> pd.DataFrame:
     name = "euclidean_distance"
@@ -49,7 +49,7 @@ def euclidean_distance(
 
 def _euclidean_distance_threshold(data: pd.DataFrame, distance_thres: float) -> pd.DataFrame:
     # get minimum distance over recording
-    data_min = np.squeeze(np.min(data, axis=0))
+    np.squeeze(np.min(data, axis=0))
     # extract phases where distance is below the sum of the threshold and the overall minimal distance
     # (we need to add this minimal distance to the threshold because we have offsets in the mocap data),
     # but only if the overall minimal distance is below a defined cutoff value

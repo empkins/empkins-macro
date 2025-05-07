@@ -1,21 +1,20 @@
 import sys
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from collections.abc import Callable, Sequence
+from typing import Any, get_args
 
 import pandas as pd
 from biopsykit.utils._datatype_validation_helper import _assert_has_columns_any_level
 from empkins_io.sensors.motion_capture.body_parts import BODY_PART_GROUP, get_all_body_parts, get_body_parts_by_group
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
-from typing_extensions import get_args
 
-from empkins_macro.utils.exceptions import FeatureExtractionError
 from empkins_macro.utils._types import str_t
 
 
 def _sanitize_multicolumn_input(
-    data: pd.DataFrame, data_format: str, param_dict: Dict[str, str_t], system: str
-) -> Dict[Tuple, Tuple]:
+    data: pd.DataFrame, data_format: str, param_dict: dict[str, str_t], system: str
+) -> dict[tuple, tuple]:
     _assert_has_columns_any_level(data, [[data_format]])
-    _assert_has_columns_any_level(data, [[k for k in param_dict.keys()]])
+    _assert_has_columns_any_level(data, [list(param_dict)])
 
     param_dict_out = {}
     for channel in param_dict:
@@ -34,11 +33,11 @@ def _sanitize_multicolumn_input(
 
 
 def _sanitize_output(
-    data_dict: Dict[Tuple, pd.Series],
+    data_dict: dict[tuple, pd.Series],
     type_name: str,
     index_names: Sequence[str],
-    new_index_order: Optional[Sequence[str]] = None,
-    metric_name: Optional[str] = None,
+    new_index_order: Sequence[str] | None = None,
+    metric_name: str | None = None,
 ) -> pd.DataFrame:
     if metric_name is None:
         metric_name = type_name
@@ -57,10 +56,10 @@ def _apply_func_per_group(
     data: pd.DataFrame,
     data_format: str,
     func_name: Callable,
-    param_dict: Dict[str, Any],
+    param_dict: dict[str, Any],
     system: MOTION_CAPTURE_SYSTEM,
     **kwargs,
-) -> Dict[Tuple, pd.Series]:
+) -> dict[tuple, pd.Series]:
     col_idx_groups = _sanitize_multicolumn_input(data, data_format, param_dict, system)
     data = data.loc[:, data_format]
 
@@ -84,9 +83,7 @@ def _apply_func_per_group(
     return return_dict
 
 
-def _extract_body_part(
-    system: MOTION_CAPTURE_SYSTEM, body_parts: Union[str, Sequence[str]]
-) -> Tuple[str, Sequence[str]]:
+def _extract_body_part(system: MOTION_CAPTURE_SYSTEM, body_parts: str | Sequence[str]) -> tuple[str, Sequence[str]]:
     if body_parts is None:
         return "TotalBody", get_all_body_parts(system=system)
     if isinstance(body_parts, list) and len(body_parts) == 1:

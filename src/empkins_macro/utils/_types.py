@@ -1,7 +1,8 @@
 """Some custom helper types to make type hints and type checking easier."""
 
+from collections.abc import Hashable, Sequence
 from pathlib import Path
-from typing import Hashable, Sequence, TypeVar, Union
+from typing import TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ str_t = TypeVar("str_t", str, Sequence[str])  # pylint:disable=invalid-name
 T = TypeVar("T")
 
 
-def _check_file_exists(file_path: path_t):
+def _check_file_exists(file_path: path_t) -> None:
     # ensure pathlib
     file_path = Path(file_path)
     if not file_path.exists():

@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 import pandas as pd
 
@@ -18,11 +16,11 @@ class TUG:
     end: float
     features: pd.DataFrame
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame) -> None:
         self.data = data
         self._extract_tug_times()
 
-    def _extract_tug_times(self, thres: float = 0.05, window_size: int = 20):
+    def _extract_tug_times(self, thres: float = 0.05, window_size: int = 20) -> None:
         # get velocity norm of chest
         t8_norm = (
             self.data["mvnx_segment"]["T8"]["vel"]
@@ -46,7 +44,7 @@ class TUG:
         # cut data to valid region
         self.data = self.data[self.start : self.end]
 
-    def extract_tug_features(self):
+    def extract_tug_features(self) -> None:
         features = [
             self._calc_tug_time(),
             self._calc_time_to_stand_up(),
@@ -73,7 +71,7 @@ class TUG:
 
         return pd.Series(min(left_stand_up_time, right_stand_up_time), ["time_to_stand_up"])
 
-    def _calc_first_step_length(self, thres: Optional[float] = 0.4) -> pd.Series:
+    def _calc_first_step_length(self, thres: float | None = 0.4) -> pd.Series:
         left_pos = self.data["mvnx_segment"]["LeftFoot"]["pos"]
         right_pos = self.data["mvnx_segment"]["RightFoot"]["pos"]
 
@@ -101,7 +99,7 @@ class TUG:
 
         return pd.Series(angle.min(), [f"{body_part}_min_angle"])
 
-    def _calc_number_of_strides(self, thres: Optional[float] = 0.4) -> pd.Series:
+    def _calc_number_of_strides(self, thres: float | None = 0.4) -> pd.Series:
         return pd.Series(len(get_strides(self.data, thres)), ["num_strides"])
 
 

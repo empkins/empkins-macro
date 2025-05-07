@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
@@ -24,7 +24,6 @@ def start_end_array_indices_to_time(data: pd.DataFrame, start_end: np.ndarray) -
 def compute_params_from_start_end_time_array(
     start_end: pd.DataFrame, data: pd.DataFrame, sampling_rate: float = 60
 ) -> pd.Series:
-
     data_len = len(data) / sampling_rate
     start_end_duration = start_end.diff(axis=1)["end"]
 

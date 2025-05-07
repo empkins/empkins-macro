@@ -1,5 +1,3 @@
-from typing import Dict
-
 import numpy as np
 import pandas as pd
 
@@ -15,11 +13,11 @@ from scipy.spatial.transform import Rotation
 
 class StrideDetection:
     data = pd.DataFrame
-    _min_vel_event_list: Dict[str, pd.DataFrame]
-    _sequence_list: Dict[str, pd.DataFrame]
+    _min_vel_event_list: dict[str, pd.DataFrame]
+    _sequence_list: dict[str, pd.DataFrame]
     features: pd.DataFrame
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame) -> None:
         self.data = data
         self._stride_detection()
         self._clean_min_vel_event_list()
@@ -38,7 +36,7 @@ class StrideDetection:
     def segment_data(self) -> pd.DataFrame:
         return self.data["mvnx_segment"]
 
-    def calc_spatio_temporal_features(self, sampling_rate: float = 60):
+    def calc_spatio_temporal_features(self, sampling_rate: float = 60) -> None:
         temporal_paras = TemporalParameterCalculation()
         temporal_paras = temporal_paras.calculate(
             stride_event_list=self._min_vel_event_list,
@@ -141,8 +139,7 @@ class StrideDetection:
 
         self.features = spatial_features.join(temporal_features)
 
-    def _stride_detection(self):
-
+    def _stride_detection(self) -> None:
         stride_event_times = {
             "left": _get_stride_events_new(self.segment_data, "left"),
             "right": _get_stride_events_new(self.segment_data, "right"),
@@ -165,8 +162,7 @@ class StrideDetection:
 
         self._min_vel_event_list = min_vel_event_list
 
-    def _clean_min_vel_event_list(self, turning_thres: float = 5, max_stride_time: float = 2):
-
+    def _clean_min_vel_event_list(self, turning_thres: float = 5, max_stride_time: float = 2) -> None:
         # drop invalid strides, either tc or ic was not detected
         self._min_vel_event_list = {
             "left": self._min_vel_event_list["left"].dropna(),
@@ -241,7 +237,6 @@ def _convert_position_and_orientation(
         dataframe with renamed columns and new index
 
     """
-
     cleaned_data = _cut_data(data, min_vel_event_list)
 
     # construct index
@@ -250,7 +245,8 @@ def _convert_position_and_orientation(
 
     min_vel_event_list = min_vel_event_list.copy()
     min_vel_event_list["num_samples"] = [
-        len(data.loc[start:end]) for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+        len(data.loc[start:end])
+        for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"], strict=False)
     ]
 
     for idx, row in min_vel_event_list.iterrows():
@@ -263,9 +259,7 @@ def _convert_position_and_orientation(
     multi_index = pd.MultiIndex.from_arrays((s_id, sample), names=["s_id", "sample"])
 
     if len(cleaned_data) != len(multi_index):
-        raise ValueError(
-            "Length of index ({}) and data ({}) does not match!".format(len(multi_index), len(cleaned_data))
-        )
+        raise ValueError(f"Length of index ({len(multi_index)}) and data ({len(cleaned_data)}) does not match!")
 
     cleaned_data = cleaned_data.set_index(multi_index)
     cleaned_data = cleaned_data.rename(columns={"x": "pos_x", "y": "pos_y", "z": "pos_z"})
@@ -278,7 +272,7 @@ def _cut_data(data: pd.DataFrame, sequence_list: pd.DataFrame) -> pd.DataFrame:
     cut_data = pd.DataFrame()
 
     # cut to valid region
-    for start, end in zip(sequence_list["start"], sequence_list["end"]):
+    for start, end in zip(sequence_list["start"], sequence_list["end"], strict=False):
         cut_data = cut_data.append(data.loc[start:end])
         # cut_data = cut_data.iloc[:-1]
 
@@ -289,7 +283,7 @@ def _calc_max_knee_flexion(joint_angle: pd.DataFrame, min_vel_event_list: pd.Dat
     angle = pd.DataFrame(
         [
             joint_angle[start:end]["z"].max()
-            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"], strict=False)
         ],
         index=min_vel_event_list.index,
         columns=["max_knee_flexion"],
@@ -302,7 +296,7 @@ def _calc_min_knee_flexion(joint_angle: pd.DataFrame, min_vel_event_list: pd.Dat
     angle = pd.DataFrame(
         [
             joint_angle[start:end]["z"].min()
-            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"], strict=False)
         ],
         index=min_vel_event_list.index,
         columns=["min_knee_flexion"],
@@ -315,7 +309,7 @@ def _calc_max_arm_flexion(joint_angle: pd.DataFrame, min_vel_event_list: pd.Data
     angle = pd.DataFrame(
         [
             joint_angle[start:end]["z"].max()
-            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"], strict=False)
         ],
         index=min_vel_event_list.index,
         columns=["max_arm_flexion"],
@@ -328,7 +322,7 @@ def _calc_min_arm_flexion(joint_angle: pd.DataFrame, min_vel_event_list: pd.Data
     angle = pd.DataFrame(
         [
             joint_angle[start:end]["z"].min()
-            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"])
+            for start, end in zip(min_vel_event_list["start"], min_vel_event_list["end"], strict=False)
         ],
         index=min_vel_event_list.index,
         columns=["min_arm_flexion"],
@@ -376,10 +370,7 @@ def _get_stride_events_new(data: pd.DataFrame, side: str) -> pd.DataFrame:
     # maximum distance between feet is possible stride event tc for foot with angle < 0 and ic for foot with angle > 0
     dist = (data["LeftFoot"]["pos"] - data["RightFoot"]["pos"]).apply(np.linalg.norm, axis=1)
 
-    if side == "left":
-        data_one_foot = data["LeftFoot"]
-    else:
-        data_one_foot = data["RightFoot"]
+    data_one_foot = data["LeftFoot"] if side == "left" else data["RightFoot"]
 
     forward = pd.DataFrame(
         Rotation.from_quat(data_one_foot["ori"].to_numpy()).apply([1, 0, 0]),
@@ -404,7 +395,6 @@ def _calc_cadence(df: pd.DataFrame) -> pd.Series:
 
 
 def _clean_stride_events(segment_data: pd.DataFrame, stride_events: pd.DataFrame, thres: float = 50) -> pd.DataFrame:
-
     # change of contact is no stride event when gyr norm is low
     mask_gyr = segment_data["gyr"].apply(np.linalg.norm, axis=1) > thres
 
@@ -435,7 +425,7 @@ def _find_matching_stride_events(stride_events: pd.DataFrame) -> pd.DataFrame:
     stride_events["ic"] = pd.DataFrame(
         [
             stride_events.query("@tc < ic < @tc_shifted")["ic"].head(1).values
-            for tc, tc_shifted in zip(stride_events["tc"], stride_events["tc_shifted"])
+            for tc, tc_shifted in zip(stride_events["tc"], stride_events["tc_shifted"], strict=False)
         ]
     )
 
@@ -469,7 +459,7 @@ def _get_min_vel(stride_events_cleaned: pd.DataFrame, segment_data: pd.DataFrame
     # drop first row
     stride_events_cleaned = stride_events_cleaned.iloc[1:, :]
 
-    for ic, tc in zip(stride_events_cleaned["ic"], stride_events_cleaned["tc"]):
+    for ic, tc in zip(stride_events_cleaned["ic"], stride_events_cleaned["tc"], strict=False):
         if np.isnan(ic) or np.isnan(tc) or (tc - ic) < 0:
             min_vel_list.append(float("nan"))
         else:
@@ -497,7 +487,6 @@ def _build_min_vel_event_list(stride_events_cleaned: pd.DataFrame, min_vel_event
 
 
 def _get_gait_sequence(min_vel_events: pd.DataFrame) -> pd.DataFrame:
-
     # find breaks in index
     min_vel_events = min_vel_events.assign(cont=np.ediff1d(min_vel_events.index, to_begin=1))
 
@@ -513,7 +502,7 @@ def _get_gait_sequence(min_vel_events: pd.DataFrame) -> pd.DataFrame:
 
     # get start and end of all "middle" sequences
     sequ = min_vel_events[min_vel_events["cont"] > 1][["start", "end_shifted"]]
-    sequ.rename({"end_shifted": "end"}, inplace=True, axis=1)
+    sequ = sequ.rename({"end_shifted": "end"}, axis=1)
 
     # add first start and last end
     sequ = sequ.append(pd.DataFrame([[np.nan, np.nan]], columns=["start", "end"]))

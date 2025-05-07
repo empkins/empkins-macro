@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import biopsykit as bp
 import numpy as np
@@ -18,11 +18,11 @@ from empkins_macro.utils._types import str_t
 def below_threshold(
     data: pd.DataFrame,
     body_part: str_t,
-    data_format: Optional[str] = "calc",
-    channel: Optional[str] = "vel",
-    axis: Optional[str] = "norm",
-    threshold: Optional[float] = 0.1,
-    system: Optional[MOTION_CAPTURE_SYSTEM] = "xsens",
+    data_format: str | None = "calc",
+    channel: str | None = "vel",
+    axis: str | None = "norm",
+    threshold: float | None = 0.1,
+    system: MOTION_CAPTURE_SYSTEM | None = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "below_threshold"

@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from inspect import getmembers, isfunction
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any
 
 import pandas as pd
 from empkins_io.sensors.motion_capture.motion_capture_systems import MOTION_CAPTURE_SYSTEM
@@ -32,16 +33,16 @@ feature_dict_all = {
 
 def extract_generic_features(
     data: pd.DataFrame,
-    feature_dict: Dict[str, Union[Dict[str, Any], Sequence[Dict[str, Any]]]],
+    feature_dict: dict[str, dict[str, Any] | Sequence[dict[str, Any]]],
     system: MOTION_CAPTURE_SYSTEM,
 ) -> pd.DataFrame:
-    import empkins_macro.feature_extraction.generic as generic
+    from empkins_macro.feature_extraction import generic
 
     feature_funcs = dict(getmembers(generic, isfunction))
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs, f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -54,7 +55,7 @@ def extract_generic_features(
 
 
 def extract_expert_features(
-    data: pd.DataFrame, feature_dict: Dict[str, Dict[str, Any]], system: MOTION_CAPTURE_SYSTEM
+    data: pd.DataFrame, feature_dict: dict[str, dict[str, Any]], system: MOTION_CAPTURE_SYSTEM
 ) -> pd.DataFrame:
     import empkins_macro.feature_extraction.body_posture_expert as expert
 
@@ -63,7 +64,7 @@ def extract_expert_features(
 
     result_list = []
     for feature_name, param_list in feature_dict.items():
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs, f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -76,10 +77,9 @@ def extract_expert_features(
 
 
 def extract_spatio_temporal_features(
-    data: pd.DataFrame, feature_dict: Optional[Dict[str, Dict[str, Any]]] = None
+    data: pd.DataFrame, feature_dict: dict[str, dict[str, Any]] | None = None
 ) -> (pd.DataFrame, "StrideDetection"):
-    import empkins_macro.feature_extraction.generic as generic
-    import empkins_macro.feature_extraction.spatio_temporal as spatio_temporal
+    from empkins_macro.feature_extraction import generic, spatio_temporal
 
     sd = spatio_temporal.StrideDetection(data)
     sd.calc_spatio_temporal_features()
@@ -89,11 +89,11 @@ def extract_spatio_temporal_features(
 
     result_list = []
 
-    if feature_dict == None:
+    if feature_dict is None:
         feature_dict = feature_dict_all
 
     for feature_name, param_list in feature_dict.items():
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs, f"Function {feature_name} not found!"
         if isinstance(param_list, dict):
             param_list = [param_list]
         for param_dict in param_list:
@@ -118,7 +118,7 @@ def extract_tug_features(data: pd.DataFrame) -> pd.DataFrame:
 def extract_temporal_features(
     data: pd.DataFrame,
     feature_list: Sequence[str],
-    index_name: Optional[str] = "window_count",
+    index_name: str | None = "window_count",
 ) -> pd.DataFrame:
     import empkins_macro.feature_extraction.temporal_change as temporal
 
@@ -127,7 +127,7 @@ def extract_temporal_features(
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
     result_list = []
     for feature_name in feature_list:
-        assert feature_name in feature_funcs.keys(), f"Function {feature_name} not found!"
+        assert feature_name in feature_funcs, f"Function {feature_name} not found!"
         data_out = feature_funcs[feature_name](data=data_wide)
         result_list.append(data_out)
 
@@ -158,7 +158,7 @@ def clean_features(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def relative_to_baseline(df: pd.DataFrame, levels: List[str], test: Optional[str] = "tug") -> pd.DataFrame:
+def relative_to_baseline(df: pd.DataFrame, levels: list[str], test: str | None = "tug") -> pd.DataFrame:
     index_order = df.index.names
     columns = df.columns
 
@@ -167,7 +167,7 @@ def relative_to_baseline(df: pd.DataFrame, levels: List[str], test: Optional[str
     if test == "gait":
         subtract["metro"] = subtract["pref"]
     df = df.subtract(subtract, axis=0)
-    df.drop(0, axis=1, inplace=True)
+    df = df.drop(0, axis=1)
     return pd.DataFrame(
         df.stack(levels).reorder_levels(index_order).sort_index(level="subject"),
         columns=columns,
@@ -181,6 +181,6 @@ def condition_difference(df: pd.DataFrame) -> pd.DataFrame:
     df = df.diff(axis=1)
     df = df.droplevel(-1, axis=1)
 
-    df.dropna(inplace=True, how="all", axis=1)
+    df = df.dropna(how="all", axis=1)
 
     return df.reorder_levels(index_order)

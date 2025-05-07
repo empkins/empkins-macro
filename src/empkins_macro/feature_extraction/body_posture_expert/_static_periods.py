@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
@@ -17,13 +17,13 @@ def static_periods(
     data: pd.DataFrame,
     body_part: str_t,
     sampling_rate: float,
-    data_format: Optional[str] = "calc",
-    channel: Optional[str] = "vel",
-    axis: Optional[str] = "norm",
-    window_sec: Optional[int] = 1,
-    overlap_percent: Optional[float] = 0.5,
-    threshold: Optional[float] = 0.0001,
-    system: Optional[str] = "xsens",
+    data_format: str | None = "calc",
+    channel: str | None = "vel",
+    axis: str | None = "norm",
+    window_sec: int | None = 1,
+    overlap_percent: float | None = 0.5,
+    threshold: float | None = 0.0001,
+    system: str | None = "xsens",
     **kwargs,
 ) -> pd.DataFrame:
     name = "static_periods"
@@ -62,7 +62,6 @@ def _static_periods_per_body_part(
     overlap_percent: float,
     threshold: float,
 ) -> pd.DataFrame:
-
     sp_list = []
 
     for part in body_part:
