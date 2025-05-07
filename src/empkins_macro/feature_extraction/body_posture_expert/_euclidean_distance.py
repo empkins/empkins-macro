@@ -48,8 +48,6 @@ def euclidean_distance(
 
 
 def _euclidean_distance_threshold(data: pd.DataFrame, distance_thres: float) -> pd.DataFrame:
-    # get minimum distance over recording
-    np.squeeze(np.min(data, axis=0))
     # extract phases where distance is below the sum of the threshold and the overall minimal distance
     # (we need to add this minimal distance to the threshold because we have offsets in the mocap data),
     # but only if the overall minimal distance is below a defined cutoff value

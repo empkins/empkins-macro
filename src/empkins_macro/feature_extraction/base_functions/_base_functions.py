@@ -24,7 +24,16 @@ def euclidean_distance(
 
     data = data.loc[:, pd.IndexSlice[data_format, body_part, channel, :]]
     # compute axis-wise difference
-    data = data.groupby("axis", axis=1).diff().dropna(axis=1)
+
+    column_levels_old = data.columns.names
+    axis_levels = data.columns.get_level_values("axis")
+    data = pd.concat(
+        {key: data.xs(key, level="axis", axis=1).diff(axis=1).dropna(axis=1) for key in axis_levels},
+        axis=1,
+        names=["axis"],
+    )
+    data = data.reorder_levels(column_levels_old, axis=1)
+
     # distance = l2 norm
     distance = pd.DataFrame(np.linalg.norm(data, axis=1), index=data.index, columns=["data"])
     return distance

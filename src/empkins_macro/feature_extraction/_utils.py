@@ -67,7 +67,8 @@ def _apply_func_per_group(
     for key, col_idxs in col_idx_groups.items():
         data_slice = data.loc[:, col_idxs]
         try:
-            res = data_slice.groupby(["body_part", "channel"], axis=1).apply(lambda df: func_name(df, **kwargs))
+            res = data_slice.T.groupby(["body_part", "channel"]).apply(lambda df: func_name(df.T, **kwargs))
+            res = res.T
             if data_slice.empty:
                 raise ValueError("")
         except ValueError as e:

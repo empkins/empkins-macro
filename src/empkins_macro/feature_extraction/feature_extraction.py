@@ -38,6 +38,10 @@ def extract_generic_features(
 ) -> pd.DataFrame:
     from empkins_macro.feature_extraction import generic
 
+    if isinstance(data.index, pd.DatetimeIndex):
+        data.index -= data.index[0]
+        data.index = data.index.total_seconds()
+
     feature_funcs = dict(getmembers(generic, isfunction))
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}
     result_list = []
@@ -58,6 +62,10 @@ def extract_expert_features(
     data: pd.DataFrame, feature_dict: dict[str, dict[str, Any]], system: MOTION_CAPTURE_SYSTEM
 ) -> pd.DataFrame:
     import empkins_macro.feature_extraction.body_posture_expert as expert
+
+    if isinstance(data.index, pd.DatetimeIndex):
+        data.index -= data.index[0]
+        data.index = data.index.total_seconds()
 
     feature_funcs = dict(getmembers(expert, isfunction))
     feature_funcs = {key: val for key, val in feature_funcs.items() if not str(key).startswith("_")}

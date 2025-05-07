@@ -13,12 +13,9 @@ def start_end_array_indices_to_time(data: pd.DataFrame, start_end: np.ndarray) -
     # end indices are *inclusive*!
     start_end[:, 1] -= 1
 
-    return pd.DataFrame(
-        {
-            "start": data.iloc[start_end[:, 0]].index.get_level_values("t"),
-            "end": data.iloc[start_end[:, 1]].index.get_level_values("t"),
-        }
-    )
+    out = pd.DataFrame({"start": data.iloc[start_end[:, 0]].index, "end": data.iloc[start_end[:, 1]].index})
+
+    return out
 
 
 def compute_params_from_start_end_time_array(
