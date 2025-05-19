@@ -6,7 +6,7 @@ authors = [
     { name = "Robert Richer", email = "robert.richer@fau.de" },
     { name = "Luca Abel", email = "luca.abel@fau.de" },
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "tsfresh>=0,<1",
     "biopsykit",
@@ -15,8 +15,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=24.8.0,<25",
-    "ruff>=0.6.3,<0.7",
+    "ruff>=0,<1",
     "ipykernel>=6.29.5,<7",
     "ipympl>=0.9.6,<0.10",
 ]
@@ -60,11 +59,13 @@ skip_gitignore = true
 [tool.poe.tasks]
 _format = "ruff format ."
 _auto_fix = "ruff check . --fix-only --show-fixes --exit-zero"
+_auto_fix_unsafe = "ruff check . --fix-only --show-fixes --exit-zero --unsafe-fixes"
 format = ["_auto_fix", "_format"]
+format_unsafe = ["_auto_fix_unsafe", "_format"]
 lint = { cmd = "ruff check src --fix", help = "Lint all files with ruff." }
-_lint_ci = "ruff check src --format=github"
-_check_black = "black . --check"
-ci_check = { sequence = ["_check_black", "_lint_ci"], help = "Check all potential format and linting issues." }
+_lint_ci = "ruff check src --output-format=github"
+_check_format = "ruff format . --check"
+ci_check = { sequence = ["_check_format", "_lint_ci"], help = "Check all potential format and linting issues." }
 test = {cmd = "pytest --cov=empkins_macro --cov-report=xml", help = "Run Pytest with coverage." }
 update_version = {"script" = "_tasks:task_update_version"}
 default = {sequence = ["format", "lint", "test"], help = "Run the default pipeline, consisting of formatting, linting, and testing."}
