@@ -3,4 +3,4 @@ from empkins_macro.feature_extraction.body_posture_expert._below_threshold impor
 from empkins_macro.feature_extraction.body_posture_expert._euclidean_distance import euclidean_distance
 from empkins_macro.feature_extraction.body_posture_expert._static_periods import static_periods
 
-__all__ = ["absolute_movement", "static_periods", "below_threshold", "euclidean_distance"]
+__all__ = ["absolute_movement", "below_threshold", "euclidean_distance", "static_periods"]
