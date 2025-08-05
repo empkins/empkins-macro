@@ -32,8 +32,6 @@ class RotarySpectralAnalysis(Algorithm):
         self.filter_order = filter_order
         self.rsa_data_ = pd.DataFrame()
 
-
-
     def run(self, data: pd.DataFrame) -> Self:
         """
         Run RSA on input data.
@@ -63,7 +61,8 @@ class RotarySpectralAnalysis(Algorithm):
         return self
 
     @staticmethod
-    def _calc_power_spectral_density(x: np.ndarray, y: np.ndarray, fsamp: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _calc_power_spectral_density(x: np.ndarray, y: np.ndarray, fsamp: float) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray]:
         """
         Calculate rotary PSD components from x and y sway data.
         """

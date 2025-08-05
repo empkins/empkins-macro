@@ -5,12 +5,12 @@ import pandas as pd
 import numpy as np
 from tpcp import Algorithm
 
+
 class RSAFeatures(Algorithm):
     _action_methods = ("total_power", "mean_frequency",
                        "median_frequency", "mode_frequency",
                        "spectral_skewness", "bandwidth_95",
                        "f25", "f50", "f75")
-
 
     feature_data_: pd.DataFrame
 
