@@ -52,7 +52,7 @@ class RotarySpectralAnalysis(Algorithm):
         cop_x = data[('cop', 'both', 'total', 'x')].values
         cop_y = data[('cop', 'both', 'total', 'y')].values
 
-        self.rsa_data = self._calc_power_spectral_density(cop_x, cop_y, sampling_rate_hz, self.lowpass_cutoff_hz,
+        self.rsa_data_ = self._calc_power_spectral_density(cop_x, cop_y, sampling_rate_hz, self.lowpass_cutoff_hz,
                                                           self.bandpass_cutoff_hz, self.filter_order)
 
         return self
@@ -115,7 +115,7 @@ class RotarySpectralAnalysis(Algorithm):
         """
         data = pd.DataFrame({
             'frequency_hz': freqs_pos,
-            'PSD_cw': psd_cw,
-            'PSD_ccw': psd_ccw
+            'PSD_CW': psd_cw,
+            'PSD_CCW': psd_ccw
         }).set_index('frequency_hz')
         return data

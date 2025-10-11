@@ -7,7 +7,7 @@ from tpcp import Algorithm
 
 
 class PsdFeatureExtraction(Algorithm):
-    _action_methods = ("run")
+    _action_methods = "run"
 
     feature_data_: pd.DataFrame
 
@@ -46,7 +46,7 @@ class PsdFeatureExtraction(Algorithm):
             total = cumulative_power[-1]
             low_idx = np.searchsorted(cumulative_power, total * 0.025)
             high_idx = np.searchsorted(cumulative_power, total * 0.975)
-            if high_idx < len(frequency_hz) and low_idx < high_idx:
+            if len(frequency_hz) > high_idx > low_idx:
                 return frequency_hz[high_idx] - frequency_hz[low_idx]
             return 0
 
@@ -68,41 +68,21 @@ class PsdFeatureExtraction(Algorithm):
             "f75": cumulative_psd_percentile(75),
         }
 
-    def run(self, psd_data: pd.DataFrame, label: str = "") -> Self:
+    def run(self, data: pd.DataFrame, label: str = "") -> Self:
 
         # TODO: define standardised format for PSD data
-        # possible to only pass a single df
-        """
-        Compute features from PSD.
 
-        Parameters
-        ----------
-        frequency_hz : np.ndarray
-            Frequency axis of PSD.
-        psd : np.ndarray
-            Power spectral density values.
-        label : str
-            Optional label (e.g., "PSD_plus" or "PSD_minus") to differentiate outputs.
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError("psd_data must be a pandas DataFrame.")
 
-        Returns
-        -------
-        Self
-        """
+        frequency_hz = data.index.to_numpy()
+        data = data.squeeze().to_numpy()
 
-        if not isinstance(psd_data, pd.DataFrame):
-            raise TypeError("psd_data must be a pandas DataFrame. Did you pass the full analysis object by mistake?")
-
-        frequency_hz = psd_data.index.values
-        if label == "CW":
-            psd = psd_data['PSD_cw'].values
-        elif label == "CCW":
-            psd = psd_data['PSD_ccw'].values
-        else:
-            # wrong data format
-            raise ValueError("Invalid label. Use 'CW' for clockwise or 'CCW' for counterclockwise.")
-
-        features = self._extract_features(frequency_hz, psd)
+        features = self._extract_features(frequency_hz, data)
         features = {f"{label}_{k}" if label else k: v for k, v in features.items()}
-        self.feature_data_ = pd.DataFrame([features])
+        features = pd.DataFrame([features])
+        features = features.stack().droplevel(0).to_frame(name="value")
+        features.index.name = "feature"
+        self.feature_data_ = features
 
         return self
