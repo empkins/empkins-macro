@@ -1,7 +1,8 @@
 from empkins_macro.feature_extraction.body_posture_expert._absolute_movement import absolute_movement
 from empkins_macro.feature_extraction.body_posture_expert._below_threshold import below_threshold
 from empkins_macro.feature_extraction.body_posture_expert._euclidean_distance import euclidean_distance
+from empkins_macro.feature_extraction.body_posture_expert._flexion import flexion
 from empkins_macro.feature_extraction.body_posture_expert._range_of_motion import range_of_motion
 from empkins_macro.feature_extraction.body_posture_expert._static_periods import static_periods
 
-__all__ = ["absolute_movement", "below_threshold", "euclidean_distance", "range_of_motion", "static_periods"]
+__all__ = ["absolute_movement", "below_threshold", "euclidean_distance", "flexion", "range_of_motion", "static_periods"]

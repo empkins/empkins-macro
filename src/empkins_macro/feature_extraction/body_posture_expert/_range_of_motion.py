@@ -18,7 +18,7 @@ def range_of_motion(
     rotation_magnitude_deg = np.rad2deg(rotation_magnitude_rad)
     rom_3d = rotation_magnitude_deg.max() - rotation_magnitude_deg.min()
     out = pd.DataFrame({"data": [rom_3d]})
-    out = pd.concat({"jL5S1": out}, names=["body_part"])
+    out = pd.concat({body_part[0]: out}, names=["body_part"])
     out = pd.concat({channel: out}, names=["channel"])
     out = pd.concat({"range_of_motion": out}, names=["type"])
     out = pd.concat({"range_of_motion": out}, names=["metric"])
