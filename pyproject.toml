@@ -67,6 +67,6 @@ lint = { cmd = "ruff check src --fix", help = "Lint all files with ruff." }
 _lint_ci = "ruff check src --output-format=github"
 _check_format = "ruff format . --check"
 ci_check = { sequence = ["_check_format", "_lint_ci"], help = "Check all potential format and linting issues." }
-test = {cmd = "pytest --cov=empkins_macro --cov-report=xml", help = "Run Pytest with coverage." }
-update_version = {"script" = "_tasks:task_update_version"}
-default = {sequence = ["format", "lint", "test"], help = "Run the default pipeline, consisting of formatting, linting, and testing."}
+test = { cmd = "pytest --cov=empkins_macro --cov-report=xml", help = "Run Pytest with coverage." }
+update_version = { "script" = "_tasks:task_update_version" }
+default = { sequence = ["format", "lint", "test"], help = "Run the default pipeline, consisting of formatting, linting, and testing." }
