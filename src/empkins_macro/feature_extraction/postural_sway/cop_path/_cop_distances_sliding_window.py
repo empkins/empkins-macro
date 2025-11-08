@@ -17,8 +17,9 @@ class CopDistanceCalculationSlidingWindow(Algorithm):
 
     window_size_sec: Parameter[int]
     overlap_percent: Parameter[float]
-    distance_algo: Parameter[CopDistanceCalculation | None]
     prepro_algo: Parameter[BaseFilter | None]
+    distance_algo: Parameter[CopDistanceCalculation | None]
+
 
     feature_data_: pd.DataFrame
 
@@ -27,27 +28,35 @@ class CopDistanceCalculationSlidingWindow(Algorithm):
         *,
         window_size_sec: int = 60,
         overlap_percent: float = 75,
-        distance_algo: CopDistanceCalculation = None,
-        prepro_algo: BaseFilter = None,
+        prepro_algo: BaseFilter| None = None,
+        distance_algo: CopDistanceCalculation | None = None,
     ):
         """
         Initializes the SlidingWindowDistanceCalculation algorithm.
         """
         self.window_size_sec = window_size_sec
         self.overlap_percent = overlap_percent
-        self.prepro_algo = prepro_algo
-        self.distance_algo = distance_algo
+        self.prepro_algo = prepro_algo # may be None or an Algorithm-like object with .apply/.output_
+        self.distance_algo = distance_algo # may be None or any Algorithm with .apply() + feature_data_
 
     @staticmethod
     def _sliding_window_path_length(
-        cop_data: pd.DataFrame, sampling_rate_hz: float, window_size_sec: int, overlap_percent: float
+        cop_data: pd.DataFrame| pd.Series, sampling_rate_hz: float, window_size_sec: int, overlap_percent: float
     ) -> list[Any]:
         """
         Calculate the sum of COP distances within sliding windows.
         """
 
+        if isinstance(cop_data, pd.DataFrame):
+            distances = cop_data["distance"] if "distance" in cop_data.columns else cop_data.iloc[:, 0]
+        else:
+            distances = pd.Series(cop_data)
+
         sw = sliding_window(
-            data=cop_data, sampling_rate=sampling_rate_hz, window_sec=window_size_sec, overlap_percent=overlap_percent
+            data=distances,
+            sampling_rate=sampling_rate_hz,
+            window_sec=window_size_sec,
+            overlap_percent=overlap_percent
         )
 
         sum_distances = []
@@ -57,7 +66,10 @@ class CopDistanceCalculationSlidingWindow(Algorithm):
 
         return sum_distances
 
-    def apply(self, cop_data: pd.DataFrame, sampling_rate_hz: float) -> Self:
+    def apply(
+            self,
+            cop_data: pd.DataFrame,
+            sampling_rate_hz: float) -> Self:
         """Apply the sliding window path length calculation algorithm.
 
         Parameters
@@ -77,16 +89,16 @@ class CopDistanceCalculationSlidingWindow(Algorithm):
             List of dictionaries containing window index and distance sum for each window.
         """
 
-        if self.distance_algo is None:
-            self.distance_algo = CopDistanceCalculation()
-
         if not isinstance(cop_data, pd.DataFrame):
             raise TypeError("cop_data must be a pandas DataFrame!")
 
         if self.prepro_algo is not None:
-            cop_data = self.prepro_algo.apply(data=cop_data).output_
+            self.prepro_algo.apply(data=cop_data)
 
-        self.distance_algo.apply(data=cop_data)
+        if self.distance_algo is None:
+            self.distance_algo = CopDistanceCalculation()
+
+        self.distance_algo.apply(data = cop_data)
         cop_dist_df = self.distance_algo.feature_data_
 
         distance_sums = self._sliding_window_path_length(
