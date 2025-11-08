@@ -61,15 +61,6 @@ class CopDistanceCalculation(Algorithm):
             Array of distances between consecutive COP points.
         """
 
-        """        
-        if not isinstance(data, pd.DataFrame):
-            raise TypeError("psd_data must be a pandas DataFrame containing x and y columns.")
-
-        distances = self._calculate_distances(data)
-        self.feature_data_ = pd.DataFrame(distances, columns=["distance"], index=data.index)
-        return self
-        """
-
         if not isinstance(data, pd.DataFrame):
             raise TypeError("data must be a pandas DataFrame containing x and y or only one x or y column.")
 
