@@ -2,6 +2,9 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation as R
+from empkins_macro.feature_extraction.body_posture_expert._utils import (
+    _INDEX_LEVELS_OUT,
+)
 
 
 def range_of_motion(
@@ -24,6 +27,6 @@ def range_of_motion(
     out = pd.concat({"range_of_motion": out}, names=["metric"])
     out = pd.concat({"x_y_z": out}, names=["axis"])
     out = out.droplevel(None)
-    out = out.reorder_levels(["body_part", "channel", "type", "metric", "axis"])
+    out = out.reorder_levels(_INDEX_LEVELS_OUT)
 
     return out

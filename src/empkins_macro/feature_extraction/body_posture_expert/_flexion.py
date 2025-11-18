@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 import pandas as pd
-
+from empkins_macro.feature_extraction.body_posture_expert._utils import (
+    _INDEX_LEVELS_OUT,
+)
 
 def flexion(
         data: pd.DataFrame,
@@ -19,6 +21,6 @@ def flexion(
     out = pd.concat({"flexion": out}, names=["metric"])
     out = pd.concat({axis: out}, names=["axis"])
     out = out.droplevel(None)
-    out = out.reorder_levels(["body_part", "channel", "type", "metric", "axis"])
+    out = out.reorder_levels(_INDEX_LEVELS_OUT)
 
     return out
