@@ -8,9 +8,11 @@ authors = [
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "stumpy", # required by tsfresh, needs to be added manually to avoid numba version conflicts
     "tsfresh>=0,<1",
     "biopsykit",
     "empkins-io",
+    "setuptools" # required by tsfresh
 ]
 
 [dependency-groups]

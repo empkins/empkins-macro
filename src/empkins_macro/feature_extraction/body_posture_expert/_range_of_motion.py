@@ -8,14 +8,14 @@ from empkins_macro.feature_extraction.body_posture_expert._utils import (
 
 
 def range_of_motion(
-        data: pd.DataFrame,
-        body_part: Sequence[str],
-        data_format: str | None = "global_pose",
-        channel: str | None = "pos_global",
-        **kwargs,
+    data: pd.DataFrame,
+    body_part: Sequence[str],
+    data_format: str | None = "global_pose",
+    channel: str | None = "pos_global",
+    **kwargs,
 ) -> pd.DataFrame:
     euler_deg = data.loc[:, pd.IndexSlice[data_format, body_part, channel, ["x", "y", "z"]]].to_numpy()
-    rotations = R.from_euler('xyz', euler_deg, degrees=True)
+    rotations = R.from_euler("xyz", euler_deg, degrees=True)
     rotation_magnitude_rad = rotations.magnitude()
 
     rotation_magnitude_deg = np.rad2deg(rotation_magnitude_rad)
